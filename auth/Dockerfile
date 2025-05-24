@@ -1,0 +1,1 @@
+FROM supabase/gotrue:v2.172.1
