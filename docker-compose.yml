@@ -30,7 +30,7 @@ services:
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PORT: 3000
+      PORT: 80
 
       DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
       DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
@@ -76,6 +76,7 @@ services:
       REST_HOST: ${REST_HOST}
       META_HOST: ${META_HOST}
       STUDIO_HOST: ${STUDIO_HOST}
+      FUNCTIONS_HOST: ${FUNCTIONS_HOST}
 
   auth:
     container_name: supabase-on-railway-01-auth
@@ -310,13 +311,11 @@ services:
 
   functions:
     container_name: supabase-on-railway-01-edge-functions
-    image: supabase/edge-runtime:v1.67.4
+    build: ./functions
     restart: unless-stopped
-    volumes:
-      - ./volumes/functions:/home/deno/functions:Z
-    depends_on:
-      analytics:
-        condition: service_healthy
+    # depends_on:
+      # analytics:
+      #   condition: service_healthy
     environment:
       JWT_SECRET: ${JWT_SECRET}
       SUPABASE_URL: http://kong:8000
@@ -325,12 +324,6 @@ services:
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
       VERIFY_JWT: "${FUNCTIONS_VERIFY_JWT}"
-    command:
-      [
-        "start",
-        "--main-service",
-        "/home/deno/functions/main"
-      ]
 
   analytics:
     container_name: supabase-on-railway-01-analytics
