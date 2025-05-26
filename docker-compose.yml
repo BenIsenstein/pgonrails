@@ -11,7 +11,7 @@ services:
 
   studio:
     container_name: supabase-on-railway-01-studio
-    image: supabase/studio:2025.05.19-sha-3487831
+    build: ./studio
     restart: unless-stopped
     healthcheck:
       test:
@@ -24,9 +24,9 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
-    depends_on:
-      analytics:
-        condition: service_healthy
+    # depends_on:
+    #   analytics:
+    #     condition: service_healthy
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -295,14 +295,14 @@ services:
 
   meta:
     container_name: supabase-on-railway-01-meta
-    image: supabase/postgres-meta:v0.89.0
+    build: ./meta
     restart: unless-stopped
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      analytics:
-        condition: service_healthy
+      # analytics:
+      #   condition: service_healthy
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: ${POSTGRES_HOST}
@@ -409,7 +409,6 @@ services:
     #   vector:
     #     condition: service_healthy
     environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: ${POSTGRES_PORT}
       POSTGRES_PORT: ${POSTGRES_PORT}
@@ -419,6 +418,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
+      PGDATA: /var/lib/postgresql/data/pgdata
 
   vector:
     container_name: supabase-on-railway-01-vector

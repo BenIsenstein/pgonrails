@@ -1,0 +1,1 @@
+FROM supabase/postgres-meta:v0.89.0

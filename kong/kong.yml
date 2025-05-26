@@ -207,35 +207,35 @@ services:
   #         - /analytics/v1/
 
   ## Secure Database routes
-  # - name: meta
-  #   _comment: 'pg-meta: /pg/* -> http://meta:8080/*'
-  #   url: http://$META_HOST:8080/
-  #   routes:
-  #     - name: meta-all
-  #       strip_path: true
-  #       paths:
-  #         - /pg/
-  #   plugins:
-  #     - name: key-auth
-  #       config:
-  #         hide_credentials: false
-  #     - name: acl
-  #       config:
-  #         hide_groups_header: true
-  #         allow:
-  #           - admin
+  - name: meta
+    _comment: 'pg-meta: /pg/* -> http://meta:8080/*'
+    url: http://$META_HOST:8080/
+    routes:
+      - name: meta-all
+        strip_path: true
+        paths:
+          - /pg/
+    plugins:
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow:
+            - admin
 
   ## Protected Dashboard - catch all remaining routes
-  # - name: dashboard
-  #   _comment: 'Studio: /* -> http://studio:3000/*'
-  #   url: http://$STUDIO_HOST:3000/
-  #   routes:
-  #     - name: dashboard-all
-  #       strip_path: true
-  #       paths:
-  #         - /
-  #   plugins:
-  #     - name: cors
-  #     - name: basic-auth
-  #       config:
-  #         hide_credentials: true
+  - name: dashboard
+    _comment: 'Studio: /* -> http://studio:3000/*'
+    url: http://$STUDIO_HOST:3000/
+    routes:
+      - name: dashboard-all
+        strip_path: true
+        paths:
+          - /
+    plugins:
+      - name: cors
+      - name: basic-auth
+        config:
+          hide_credentials: true
