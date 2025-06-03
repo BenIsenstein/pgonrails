@@ -184,7 +184,7 @@ services:
   #   plugins:
   #     - name: cors
 
-  # ## Edge Functions routes
+  ## Edge Functions routes
   - name: functions-v1
     _comment: 'Edge Functions: /functions/v1/* -> http://functions:9000/*'
     url: http://$FUNCTIONS_HOST:9000/
@@ -199,7 +199,7 @@ services:
   ## Analytics routes
   # - name: analytics-v1
   #   _comment: 'Analytics: /analytics/v1/* -> http://analytics:4000/*'
-  #   url: http://$ANALYTICS_HOST:4000/
+  #   url: http://analytics:4000/
   #   routes:
   #     - name: analytics-v1-all
   #       strip_path: true

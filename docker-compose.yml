@@ -9,6 +9,21 @@ name: supabase-on-railway-01
 
 services:
 
+  site:
+    container_name: supabase-on-railway-01-site
+    build:
+      context: ./site
+      dockerfile: dev.Dockerfile
+    restart: unless-stopped
+    ports:
+      - 5173:5173
+    volumes:
+      - ./site:/app
+      #- /app/node_modules
+    environment:
+      VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
+      VITE_SUPABASE_API_KEY: ${ANON_KEY}
+
   studio:
     container_name: supabase-on-railway-01-studio
     build: ./studio
@@ -24,13 +39,12 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
-    # depends_on:
-    #   analytics:
-    #     condition: service_healthy
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PORT: 80
 
       DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
       DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
@@ -45,6 +59,7 @@ services:
       LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
       LOGFLARE_URL: http://analytics:4000
       NEXT_PUBLIC_ENABLE_LOGS: true
+      # NEXT_PUBLIC_BASE_PATH: /studio # Host the studio at a different url path behind kong
       # Comment to use Big Query backend for analytics
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
       # Uncomment to use Big Query backend for analytics
@@ -57,9 +72,9 @@ services:
     ports:
       - ${KONG_HTTP_PORT}:8000/tcp
       - ${KONG_HTTPS_PORT}:8443/tcp
-    # depends_on:
-    #   analytics:
-    #     condition: service_healthy
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
@@ -78,6 +93,7 @@ services:
       STUDIO_HOST: ${STUDIO_HOST}
       FUNCTIONS_HOST: ${FUNCTIONS_HOST}
       REALTIME_HOST: ${REALTIME_HOST}
+      SITE_HOST: ${SITE_HOST}
 
   auth:
     container_name: supabase-on-railway-01-auth
@@ -100,8 +116,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
@@ -170,8 +186,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
@@ -190,8 +206,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -300,8 +316,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: ${POSTGRES_HOST}
@@ -314,11 +330,9 @@ services:
     container_name: supabase-on-railway-01-edge-functions
     build: ./functions
     restart: unless-stopped
-    ports:
-      - 9000:8080
-    # depends_on:
-      # analytics:
-      #   condition: service_healthy
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       JWT_SECRET: ${JWT_SECRET}
       SUPABASE_URL: http://kong:8000
@@ -328,7 +342,7 @@ services:
       # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
       VERIFY_JWT: "${FUNCTIONS_VERIFY_JWT}"
       EDGE_RUNTIME_PORT: 8081
-      CADDY_PORT: 80
+      CADDY_PORT: 9000
 
   analytics:
     container_name: supabase-on-railway-01-analytics
@@ -400,9 +414,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # depends_on:
-    #   vector:
-    #     condition: service_healthy
+    depends_on:
+      vector:
+        condition: service_healthy
     environment:
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: ${POSTGRES_PORT}

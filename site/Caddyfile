@@ -1,0 +1,21 @@
+{
+	auto_https off
+	admin off
+	log {
+		format console
+	}
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:{$PORT} {
+	log {
+		format console
+	}
+	respond /health 200
+	root * usr/share/caddy
+	encode gzip
+	file_server
+	try_files {path} /index.html
+}
