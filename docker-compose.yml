@@ -14,12 +14,14 @@ services:
     build:
       context: ./site
       dockerfile: dev.Dockerfile
+      args:
+        VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
+        VITE_SUPABASE_API_KEY: ${ANON_KEY}
     restart: unless-stopped
     ports:
       - 5173:5173
     volumes:
       - ./site:/app
-      #- /app/node_modules
     environment:
       VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
       VITE_SUPABASE_API_KEY: ${ANON_KEY}

@@ -1,5 +1,8 @@
 # ---------- Build Stage ----------
-FROM node:18-alpine AS builder
+FROM node:20 AS builder
+
+ARG VITE_SUPABASE_API_URL
+ARG VITE_SUPABASE_API_KEY
 
 # Set working directory
 WORKDIR /app
