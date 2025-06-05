@@ -35,6 +35,10 @@ if ! [[ -L "/etc/postgresql-custom" && -d "/var/lib/postgresql/data/custom" ]]; 
   ln -s /var/lib/postgresql/data/custom /etc/postgresql-custom
 fi
 
+# Make "listen_addresses" based on environment
+echo "" >> /etc/postgresql/postgresql.conf
+echo "listen_addresses = '${LISTEN_ADDRESSES}'" >> /etc/postgresql/postgresql.conf
+
 # Call the entrypoint script with the
 # appropriate PGHOST & PGPORT and redirect
 # the output to stdout if LOG_TO_STDOUT is true

@@ -6,6 +6,9 @@ _transform: true
 ###
 consumers:
   - username: DASHBOARD
+    basicauth_credentials:
+      - username: $DASHBOARD_USERNAME
+        password: $DASHBOARD_PASSWORD
   - username: anon
     keyauth_credentials:
       - key: $SUPABASE_ANON_KEY
@@ -21,14 +24,6 @@ acls:
     group: anon
   - consumer: service_role
     group: admin
-
-###
-### Dashboard credentials
-###
-basicauth_credentials:
-  - consumer: DASHBOARD
-    username: $DASHBOARD_USERNAME
-    password: $DASHBOARD_PASSWORD
 
 ###
 ### API Routes

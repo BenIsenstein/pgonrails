@@ -430,6 +430,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
       PGDATA: /var/lib/postgresql/data/pgdata
+      LISTEN_ADDRESSES: "*"
 
   vector:
     container_name: supabase-on-railway-01-vector
