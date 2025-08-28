@@ -1,4 +1,4 @@
-FROM supabase/supavisor:2.5.1
+FROM supabase/supavisor:2.5.7
 
 COPY ./pooler.exs /etc/pooler/pooler.exs
 COPY ./entrypoint.sh /entrypoint.sh

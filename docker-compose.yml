@@ -1,8 +1,7 @@
 # Usage
 #   Start:              docker compose up
-#   With helpers:       docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml up
 #   Stop:               docker compose down
-#   Destroy:            docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
+#   Destroy:            docker compose down --volumes --remove-orphans
 #   Reset everything:  ./reset.sh
 
 name: supabase-on-railway-01
@@ -247,7 +246,7 @@ services:
   # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
   storage:
     container_name: supabase-on-railway-01-storage
-    image: supabase/storage-api:v1.22.17
+    image: supabase/storage-api:v1.25.7
     restart: unless-stopped
     volumes:
       - ./volumes/storage:/var/lib/storage:z
@@ -348,7 +347,7 @@ services:
 
   analytics:
     container_name: supabase-on-railway-01-analytics
-    image: supabase/logflare:1.12.0
+    image: supabase/logflare:1.14.2
     restart: unless-stopped
     ports:
       - 4000:4000
@@ -495,18 +494,21 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASE_URL: ecto://supabase_admin:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/_supabase
+      DATABASE_URL: ecto://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/_supabase
       CLUSTER_POSTGRES: true
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       VAULT_ENC_KEY: ${VAULT_ENC_KEY}
       API_JWT_SECRET: ${JWT_SECRET}
       METRICS_JWT_SECRET: ${JWT_SECRET}
       REGION: local
-      ERL_AFLAGS: -proto_dist inet_tcp
+      ERL_AFLAGS: -proto_dist inet6_tcp
+      ECTO_IPV6: true
       POOLER_TENANT_ID: ${POOLER_TENANT_ID}
       POOLER_DEFAULT_POOL_SIZE: ${POOLER_DEFAULT_POOL_SIZE}
       POOLER_MAX_CLIENT_CONN: ${POOLER_MAX_CLIENT_CONN}
       POOLER_POOL_MODE: transaction
+      DB_POOL_SIZE: ${POOLER_DB_POOL_SIZE}
+      SUPAVISOR_DB_IP_VERSION: ${SUPAVISOR_DB_IP_VERSION}
 
 volumes:
   db-config:

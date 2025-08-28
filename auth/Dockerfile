@@ -1,1 +1,1 @@
-FROM supabase/gotrue:v2.172.1
+FROM supabase/gotrue:v2.177.0
