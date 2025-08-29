@@ -342,8 +342,6 @@ services:
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
       VERIFY_JWT: "${FUNCTIONS_VERIFY_JWT}"
-      EDGE_RUNTIME_PORT: 8081
-      CADDY_PORT: 9000
 
   analytics:
     container_name: supabase-on-railway-01-analytics
