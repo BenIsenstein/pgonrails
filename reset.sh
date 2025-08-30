@@ -14,7 +14,9 @@ docker compose down --volumes --remove-orphans
 
 echo "Cleaning up bind-mounted directories..."
 BIND_MOUNTS=(
-  "./volumes/db/data"
+  "./volumes/db/data",
+  "./volumes/storage/.minio.sys",
+  "./volumes/storage/default-bucket",
 )
 
 for DIR in "${BIND_MOUNTS[@]}"; do
