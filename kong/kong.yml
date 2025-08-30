@@ -191,16 +191,6 @@ services:
     plugins:
       - name: cors
 
-  ## Analytics routes
-  # - name: analytics-v1
-  #   _comment: 'Analytics: /analytics/v1/* -> http://analytics:4000/*'
-  #   url: http://analytics:4000/
-  #   routes:
-  #     - name: analytics-v1-all
-  #       strip_path: true
-  #       paths:
-  #         - /analytics/v1/
-
   ## Secure Database routes
   - name: meta
     _comment: 'pg-meta: /pg/* -> http://meta:8080/*'

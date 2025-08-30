@@ -5,7 +5,6 @@ COPY ./webhooks.sql /docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
 COPY ./roles.sql /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
 COPY ./jwt.sql /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
 COPY ./_supabase.sql /docker-entrypoint-initdb.d/migrations/97-_supabase.sql
-COPY ./logs.sql /docker-entrypoint-initdb.d/migrations/99-logs.sql
 
 COPY --chmod=755 wrapper.sh /usr/local/bin/wrapper.sh
 
