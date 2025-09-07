@@ -1,4 +1,4 @@
-echo "Creating .env file..."
+echo "Safely creating .env file..."
 
 if [ -f ".env" ]; then
   echo "Found an existing .env file."

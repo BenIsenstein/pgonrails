@@ -67,6 +67,10 @@ Make sure the email signup and SMTP environment variables are set:
 
 ## Get Started
 
+Copy `.env.example` into a `.env` file you can put sensitive values in and ignored by git
+
+`chmod +x ./setup-env.sh && ./setup-env.sh`
+
 Build the Docker compose stack
 
 `docker compose build`
