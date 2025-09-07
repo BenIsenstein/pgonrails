@@ -1,6 +1,6 @@
-# Open data app using React, Vite, Supabase
+# SPA template using React, Vite, Supabase
 
-A react app using vite, tailwindCSS, and Supabase.
+A react app using vite, UnoCSS, and Supabase.
 
 The app is responsive and was built with a mobile-first approach.
 
@@ -10,4 +10,4 @@ The app is responsive and was built with a mobile-first approach.
 
 Thank you!
 
-- Ben and Matt
+- Ben
