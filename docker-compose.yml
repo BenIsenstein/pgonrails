@@ -139,6 +139,11 @@ services:
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
       GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
       GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
+      GOTRUE_MAILER_TEMPLATES_INVITE: http://localhost:8080/invite.html
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://localhost:8080/confirmation.html
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://localhost:8080/recovery.html
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://localhost:8080/magiclink.html
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: http://localhost:8080/emailchange.html
 
       GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP}
       GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
@@ -161,6 +166,8 @@ services:
       # GOTRUE_HOOK_SEND_EMAIL_ENABLED: "false"
       # GOTRUE_HOOK_SEND_EMAIL_URI: "http://host.docker.internal:54321/functions/v1/email_sender"
       # GOTRUE_HOOK_SEND_EMAIL_SECRETS: "v1,whsec_VGhpcyBpcyBhbiBleGFtcGxlIG9mIGEgc2hvcnRlciBCYXNlNjQgc3RyaW5n"
+    volumes:
+      - ./auth/templates:/home/mailer/templates
 
   rest:
     container_name: supabase-on-railway-01-rest

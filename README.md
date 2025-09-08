@@ -56,7 +56,7 @@ Log in to the Google account you want all transactional emails to come from. Vis
 
 Make sure the email signup and SMTP environment variables are set:
 
-```
+```Dotenv
     ENABLE_EMAIL_SIGNUP=true
     SMTP_HOST=smtp.gmail.com
     SMTP_PORT=587
@@ -71,13 +71,13 @@ Copy `.env.example` into a `.env` file you can put sensitive values in and ignor
 
 `chmod +x ./setup-env.sh && ./setup-env.sh`
 
-Build the Docker compose stack
-
-`docker compose build`
-
 Setup local volumes for development (they are ignored by git and won't exist when you first clone the repo)
 
 `chmod +x ./setup-volumes.sh && ./setup-volumes.sh`
+
+Build the Docker compose stack
+
+`docker compose build`
 
 Run the app locally
 
