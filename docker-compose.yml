@@ -414,6 +414,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: ${POSTGRES_PORT}
@@ -438,9 +440,9 @@ services:
       db:
         condition: service_healthy
     environment:
-      LISTEN_ADDR: "::"
+      LISTEN_ADDR: "*"
       AUTH_TYPE: plain
-      DB_USER: postgres
+      DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_HOST: ${POSTGRES_HOST}
       DB_PORT: ${POSTGRES_PORT}
