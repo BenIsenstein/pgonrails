@@ -1,0 +1,21 @@
+name: Deploy Database Migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "db/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: cd db && supabase db push --db-url "${{ secrets.DB_URL }}"
