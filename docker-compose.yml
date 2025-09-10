@@ -441,7 +441,7 @@ services:
         condition: service_healthy
     environment:
       LISTEN_ADDR: "*"
-      AUTH_TYPE: plain
+      AUTH_TYPE: scram-sha-256
       DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_HOST: ${POSTGRES_HOST}
