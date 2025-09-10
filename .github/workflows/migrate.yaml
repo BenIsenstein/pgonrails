@@ -18,4 +18,4 @@ jobs:
         with:
           version: latest
 
-      - run: cd db && supabase db push --db-url "${{ secrets.DB_URL }}" --yes
+      - run: cd db && supabase db push --db-url "${{ secrets.DB_URL }}" --yes --debug
