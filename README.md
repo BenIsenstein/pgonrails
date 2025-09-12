@@ -1,10 +1,14 @@
-# Supabase On Railway
+# PG On Rails
 
 This is a Docker Compose setup for self-hosting Supabase. It has been tweaked to be compatible with hosting on Railway. It is being closely maintained and updated as the Supabase platform adds new features.
 
-My longterm vision is to make Supabase on Railway *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
+My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
 ## Features
+
+### Sane and simple defaults
+
+Get working on real application features in seconds. We go the extra mile to make default configuration minimal while still covering everything needed to run out-of-the-box. Avoid drowning in config, and opt in to more hackability as needed.
 
 ### Add your app logic, deploy seamlessly
 
@@ -12,7 +16,7 @@ Every service gets its own directory, so watchpaths just work. Add new functions
 
 ### Your frontend, included in the stack
 
-Reduce context-switching and host as much of your stack as possible on the same platform. For NextJS, Django, htmx or any other backend-for-frontend server, get fast and secure access to Supabase data APIs via the shared internal network.
+Reduce context-switching and host as much of your stack as possible on the same platform. For NextJS, Django, htmx or any server-rendered frontend, get fast and secure access to Supabase data APIs via the shared internal network.
 
 ### Full control over your application
 
@@ -23,7 +27,7 @@ For the hackers. Configure every aspect of your Supabase application and version
 - Networking settings
 - Railway config-as-code
 
-## Frontend included with a seamless dev mode
+## Frontend included with seamless dev mode
 
 We included a frontend app in the stack and named it `site`. The frontend site is a React single page app (SPA) built with Vite and UnoCSS (Tailwind preset). It includes basic auth functionality so you can begin building user experiences out of the box. A parallel project branch with a NextJS app as the `site` is on the way.
 
@@ -62,22 +66,14 @@ Make sure the email signup and SMTP environment variables are set:
     SMTP_PORT=587
     SMTP_USER=your-account@gmail.com
     SMTP_PASS="abcd efgh ijkl mnop"
-    SMTP_SENDER_NAME="Supabase On Railway"
+    SMTP_SENDER_NAME="PG On Rails"
 ```
 
 ## Get Started
 
-Copy `.env.example` into a `.env` file you can put sensitive values in and ignored by git
+Setup environment and volumes
 
-`chmod +x ./setup-env.sh && ./setup-env.sh`
-
-Setup local volumes for development (they are ignored by git and won't exist when you first clone the repo)
-
-`chmod +x ./setup-volumes.sh && ./setup-volumes.sh`
-
-Build the Docker compose stack
-
-`docker compose build`
+`./setup.sh`
 
 Run the app locally
 

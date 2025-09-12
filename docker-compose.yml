@@ -1,32 +1,33 @@
 # Usage
+#   Setup:              ./setup.sh
 #   Start:              docker compose up
 #   Stop:               docker compose down
 #   Destroy:            docker compose down --volumes --remove-orphans
 #   Reset everything:  ./reset.sh
 
-name: supabase-on-railway-01
+name: pgonrails
 
 services:
 
   site:
-    container_name: supabase-on-railway-01-site
+    container_name: pgonrails-site
     build:
       context: ./site
       dockerfile: dev.Dockerfile
-      args:
-        VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
-        VITE_SUPABASE_API_KEY: ${ANON_KEY}
     restart: unless-stopped
     ports:
-      - 5173:5173
+      - ${SITE_PORT}:${SITE_PORT}
     volumes:
       - ./site:/app
     environment:
-      VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
+      VITE_HOST: ${SITE_LISTEN}
+      VITE_PORT: ${SITE_PORT}
+
+      VITE_SUPABASE_API_URL: http://localhost:${KONG_HTTP_PORT}
       VITE_SUPABASE_API_KEY: ${ANON_KEY}
 
   studio:
-    container_name: supabase-on-railway-01-studio
+    container_name: pgonrails-studio
     build: ./studio
     restart: unless-stopped
     healthcheck:
@@ -41,48 +42,59 @@ services:
       interval: 5s
       retries: 3
     environment:
-      STUDIO_PG_META_URL: http://meta:8080
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPABASE_URL: http://${KONG_HOST}:${KONG_HTTP_PORT}
+      SUPABASE_PUBLIC_URL: http://localhost:${KONG_HTTP_PORT}
+      STUDIO_PG_META_URL: http://${META_HOST}:${META_PORT}
 
-      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
-      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-
-      SUPABASE_URL: http://${KONG_HOST}:8000
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       AUTH_JWT_SECRET: ${JWT_SECRET}
 
+      DEFAULT_ORGANIZATION_NAME: Default Organization
+      DEFAULT_PROJECT_NAME: Default Project
+      
+
   kong:
-    container_name: supabase-on-railway-01-kong
+    container_name: pgonrails-kong
     build: ./kong
     restart: unless-stopped
     ports:
-      - ${KONG_HTTP_PORT}:8000/tcp
-      - ${KONG_HTTPS_PORT}:8443/tcp
+      - ${KONG_HTTP_PORT}:${KONG_HTTP_PORT}/tcp
     environment:
+      KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_HTTP_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_HTTP_PORT} reuseport backlog=16384
+      # To find the IP address of services, Kong looks for SRV records by default, which don't exist in the Docker Compose internal network DNS
+      KONG_DNS_ORDER: LAST,A,CNAME
+
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
-      # https://github.com/supabase/cli/issues/14
-      KONG_DNS_ORDER: LAST,A,CNAME
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+
       AUTH_HOST: ${AUTH_HOST}
+      AUTH_PORT: ${AUTH_PORT}
       REST_HOST: ${REST_HOST}
+      REST_PORT: ${REST_PORT}
       META_HOST: ${META_HOST}
+      META_PORT: ${META_PORT}
       STUDIO_HOST: ${STUDIO_HOST}
+      STUDIO_PORT: ${STUDIO_PORT}
       FUNCTIONS_HOST: ${FUNCTIONS_HOST}
+      FUNCTIONS_PORT: ${FUNCTIONS_PORT}
       REALTIME_HOST: ${REALTIME_HOST}
+      REALTIME_PORT: ${REALTIME_PORT}
       STORAGE_HOST: ${STORAGE_HOST}
+      STORAGE_PORT: ${STORAGE_PORT}
 
   auth:
-    container_name: supabase-on-railway-01-auth
+    container_name: pgonrails-auth
     build: ./auth
     restart: unless-stopped
     healthcheck:
@@ -100,19 +112,16 @@ services:
       retries: 3
     depends_on:
       db:
-        # Disable this if you are using an external Postgres database
         condition: service_healthy
     environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      GOTRUE_API_HOST: ${AUTH_LISTEN}
+      GOTRUE_API_PORT: ${AUTH_PORT}
 
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
-      GOTRUE_SITE_URL: ${SITE_URL}
-      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
-      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP}
+      API_EXTERNAL_URL: http://localhost:${KONG_HTTP_PORT}
+      GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
 
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
@@ -120,66 +129,37 @@ services:
       GOTRUE_JWT_EXP: ${JWT_EXPIRY}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
 
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
-      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS}
-      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
-
-      # Uncomment to bypass nonce check in ID Token flow. Commonly set to true when using Google Sign In on mobile.
-      # GOTRUE_EXTERNAL_SKIP_NONCE_CHECK: true
-
-      # GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: true
-      # GOTRUE_SMTP_MAX_FREQUENCY: 1s
       GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
       GOTRUE_SMTP_HOST: ${SMTP_HOST}
       GOTRUE_SMTP_PORT: ${SMTP_PORT}
       GOTRUE_SMTP_USER: ${SMTP_USER}
       GOTRUE_SMTP_PASS: ${SMTP_PASS}
-      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
-      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE}
-      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
-      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
-      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
-      GOTRUE_MAILER_TEMPLATES_INVITE: http://localhost:8080/invite.html
-      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://localhost:8080/confirmation.html
-      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://localhost:8080/recovery.html
-      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://localhost:8080/magiclink.html
-      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: http://localhost:8080/emailchange.html
-
-      GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP}
-      GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
-      # Uncomment to enable custom access token hook. Please see: https://supabase.com/docs/guides/auth/auth-hooks for full list of hooks and additional details about custom_access_token_hook
-
-      # GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED: "true"
-      # GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI: "pg-functions://postgres/public/custom_access_token_hook"
-      # GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_SECRETS: "<standard-base64-secret>"
-
-      # GOTRUE_HOOK_MFA_VERIFICATION_ATTEMPT_ENABLED: "true"
-      # GOTRUE_HOOK_MFA_VERIFICATION_ATTEMPT_URI: "pg-functions://postgres/public/mfa_verification_attempt"
-
-      # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_ENABLED: "true"
-      # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI: "pg-functions://postgres/public/password_verification_attempt"
-
-      # GOTRUE_HOOK_SEND_SMS_ENABLED: "false"
-      # GOTRUE_HOOK_SEND_SMS_URI: "pg-functions://postgres/public/custom_access_token_hook"
-      # GOTRUE_HOOK_SEND_SMS_SECRETS: "v1,whsec_VGhpcyBpcyBhbiBleGFtcGxlIG9mIGEgc2hvcnRlciBCYXNlNjQgc3RyaW5n"
-
-      # GOTRUE_HOOK_SEND_EMAIL_ENABLED: "false"
-      # GOTRUE_HOOK_SEND_EMAIL_URI: "http://host.docker.internal:54321/functions/v1/email_sender"
-      # GOTRUE_HOOK_SEND_EMAIL_SECRETS: "v1,whsec_VGhpcyBpcyBhbiBleGFtcGxlIG9mIGEgc2hvcnRlciBCYXNlNjQgc3RyaW5n"
+      GOTRUE_SMTP_SENDER_NAME: "PG On Rails"
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_MAILER_TEMPLATES_INVITE: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/invite.html
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/confirmation.html
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/recovery.html
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/magiclink.html
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/emailchange.html
     volumes:
       - ./auth/templates:/home/mailer/templates
 
   rest:
-    container_name: supabase-on-railway-01-rest
+    container_name: pgonrails-rest
     build: ./rest
     restart: unless-stopped
     depends_on:
       db:
-        # Disable this if you are using an external Postgres database
         condition: service_healthy
     environment:
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
+      PGRST_SERVER_HOST: ${REST_LISTEN}
+      PGRST_SERVER_PORT: ${REST_PORT}
+
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_USE_LEGACY_GUCS: false
@@ -188,12 +168,11 @@ services:
 
   realtime:
     # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
-    container_name: realtime-dev.supabase-on-railway-01-realtime
+    container_name: realtime-dev.pgonrails-realtime
     build: ./realtime
     restart: unless-stopped
     depends_on:
       db:
-        # Disable this if you are using an external Postgres database
         condition: service_healthy
     healthcheck:
       test:
@@ -212,17 +191,19 @@ services:
       interval: 5s
       retries: 3
     environment:
-      PORT: 4000
-      DB_HOST: ${POSTGRES_HOST}
-      DB_PORT: ${POSTGRES_PORT}
+      ERL_AFLAGS: -proto_dist inet6_tcp # Use ipv6
+      PORT: ${REALTIME_PORT}
+
       DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_NAME: ${POSTGRES_DB}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
       DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
-      DB_ENC_KEY: supabaserealtime
+
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY}
+      SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE}
       API_JWT_SECRET: ${JWT_SECRET}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      ERL_AFLAGS: -proto_dist inet_tcp
       DNS_NODES: "''"
       RLIMIT_NOFILE: 10000
       APP_NAME: realtime
@@ -230,7 +211,7 @@ services:
       RUN_JANITOR: true
 
   storage:
-    container_name: supabase-on-railway-01-storage
+    container_name: pgonrails-storage
     build: ./storage
     restart: unless-stopped
     healthcheck:
@@ -248,7 +229,6 @@ services:
       retries: 3
     depends_on:
       db:
-        # Disable this if you are using an external Postgres database
         condition: service_healthy
       rest:
         condition: service_started
@@ -256,17 +236,19 @@ services:
         condition: service_started
     environment:
       # Server
-      SERVER_HOST: "::"
-      SERVER_PORT: 5000
-      SERVER_ADMIN_PORT: 5001
+      SERVER_HOST: ${STORAGE_LISTEN}
+      SERVER_PORT: ${STORAGE_PORT}
+      SERVER_ADMIN_PORT: ${STORAGE_ADMIN_PORT}
 
       # Auth
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
       AUTH_JWT_SECRET: ${JWT_SECRET}
       AUTH_JWT_ALGORITHM: HS256
 
       # Database
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      # DATABASE_POOL_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POOLER_HOST}:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      DATABASE_POOL_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POOLER_HOST}:${POOLER_PORT}/${DB_NAME}
       DATABASE_CONNECTION_TIMEOUT: 3000
 
       # Migrations
@@ -279,17 +261,18 @@ services:
 
       # S3 Backend
       STORAGE_BACKEND: s3
-      STORAGE_S3_ENDPOINT: http://${S3_HOST}:9000
+      STORAGE_S3_ENDPOINT: http://${S3_HOST}:${S3_PORT}
       STORAGE_S3_FORCE_PATH_STYLE: true
       STORAGE_S3_MAX_SOCKETS: 200
       STORAGE_S3_REGION: default-region
       STORAGE_S3_BUCKET: default-bucket  # name of top-level bucket. objects are stored in a structure of <top-level-bucket>/<tenant>/<supabase-bucket>/<object>
-      TENANT_ID: default-tenant # TODO: https://github.com/supabase/storage-api/issues/55
+      TENANT_ID: default-tenant
 
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
 
       # Upload
+      FILE_SIZE_LIMIT: 52428800
       UPLOAD_FILE_SIZE_LIMIT: 524288000
       UPLOAD_FILE_SIZE_LIMIT_STANDARD: 52428800
       UPLOAD_SIGNED_URL_EXPIRATION_TIME: 120
@@ -304,7 +287,7 @@ services:
       IMAGE_TRANSFORMATION_LIMIT_MIN_SIZE: 0
       IMAGE_TRANSFORMATION_LIMIT_MAX_SIZE: 2000
 
-      IMGPROXY_URL: http://${IMGPROXY_HOST}:5001
+      IMGPROXY_URL: http://${IMGPROXY_HOST}:${IMGPROXY_PORT}
       IMGPROXY_REQUEST_TIMEOUT: 15
       IMGPROXY_HTTP_MAX_SOCKETS: 500
 
@@ -312,14 +295,12 @@ services:
       S3_PROTOCOL_ACCESS_KEY_ID: 625729a08b95bf1b7ff351a663f3a23c #???
       S3_PROTOCOL_ACCESS_KEY_SECRET: 850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907 #???
 
-      # Other
-      ANON_KEY: ${ANON_KEY}
-      SERVICE_KEY: ${SERVICE_ROLE_KEY}
-      POSTGREST_URL: http://${REST_HOST}:3000
+      # PostgREST
+      POSTGREST_URL: http://${REST_HOST}:${REST_PORT}
       PGRST_JWT_SECRET: ${JWT_SECRET}
-      FILE_SIZE_LIMIT: 52428800
+      
   imgproxy:
-    container_name: supabase-on-railway-01-imgproxy
+    container_name: pgonrails-imgproxy
     build: ./imgproxy
     restart: unless-stopped
     healthcheck:
@@ -336,20 +317,23 @@ services:
       minio:
         condition: service_started
     environment:
-      IMGPROXY_BIND: :5001
+      IMGPROXY_BIND: ${IMGPROXY_LISTEN}:${IMGPROXY_PORT}
+
+      IMGPROXY_USE_S3: true
+      IMGPROXY_S3_ENDPOINT: http://${S3_HOST}:${S3_PORT}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+
       IMGPROXY_USE_ETAG: true
       IMGPROXY_ENABLE_WEBP_DETECTION: true
       IMGPROXY_JPEG_PROGRESSIVE: true
-      IMGPROXY_USE_S3: true
-      IMGPROXY_S3_ENDPOINT: http://${S3_HOST}:9000
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      
   minio:
     build: ./minio
-    container_name: supabase-on-railway-01-minio
+    container_name: pgonrails-minio
     ports:
-      - "9000:9000"  # S3 API
-      - "9001:9001"  # Web Console
+      - ${S3_PORT}:${S3_PORT}
+      - ${S3_CONSOLE_PORT}:${S3_CONSOLE_PORT}
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -363,44 +347,46 @@ services:
     restart: unless-stopped
 
   meta:
-    container_name: supabase-on-railway-01-meta
+    container_name: pgonrails-meta
     build: ./meta
     restart: unless-stopped
     depends_on:
       db:
-        # Disable this if you are using an external Postgres database
         condition: service_healthy
     environment:
-      PG_META_PORT: 8080
-      PG_META_DB_HOST: ${POSTGRES_HOST}
-      PG_META_DB_PORT: ${POSTGRES_PORT}
-      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_HOST: ${META_LISTEN}
+      PG_META_PORT: ${META_PORT}
+
       PG_META_DB_USER: supabase_admin
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_DB_HOST: ${DB_HOST}
+      PG_META_DB_PORT: ${DB_PORT}
+      PG_META_DB_NAME: ${DB_NAME}
 
   functions:
-    container_name: supabase-on-railway-01-edge-functions
+    container_name: pgonrails-edge-functions
     build: ./functions
     restart: unless-stopped
     environment:
-      JWT_SECRET: ${JWT_SECRET}
-      SUPABASE_URL: http://kong:8000
+      EDGE_RUNTIME_LISTEN: ${FUNCTIONS_LISTEN}
+      EDGE_RUNTIME_PORT: ${FUNCTIONS_PORT}
+
+      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      SUPABASE_URL: http://${KONG_HOST}:${KONG_HTTP_PORT}
+      
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
-      VERIFY_JWT: ${FUNCTIONS_VERIFY_JWT}
 
-  # Comment out everything below this point if you are using an external Postgres database
+      JWT_SECRET: ${JWT_SECRET}
+      # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
+      VERIFY_JWT: false
+
   db:
-    container_name: supabase-on-railway-01-db
+    container_name: pgonrails-db
     build: ./db
     restart: unless-stopped
     volumes:
-      # PGDATA directory is persisted between restarts
       - ./volumes/db/data:/var/lib/postgresql/data:Z
-      # Use named volume to persist pgsodium decryption key between restarts
-      # - db-config:/etc/postgresql-custom
     healthcheck:
       test:
         [
@@ -415,41 +401,42 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - 5432:5432
+      - ${DB_PORT}:${DB_PORT}
     environment:
+      LISTEN_ADDRESSES: ${DB_LISTEN}
+      PGPORT: ${DB_PORT}
+      POSTGRES_PORT: ${DB_PORT}
+
+      # "POSTGRES_HOST" here means a local socket address inside the container to run on and perform setup migrations
       POSTGRES_HOST: /var/run/postgresql
-      PGPORT: ${POSTGRES_PORT}
-      POSTGRES_PORT: ${POSTGRES_PORT}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGDATABASE: ${POSTGRES_DB}
-      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATABASE: ${DB_NAME}
+      POSTGRES_DB: ${DB_NAME}
+
+      PGDATA: /var/lib/postgresql/data/pgdata
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
-      PGDATA: /var/lib/postgresql/data/pgdata
-      LISTEN_ADDRESSES: "*"
 
-  # Update the DATABASE_URL if you are using an external Postgres database
   pooler:
-    container_name: supabase-on-railway-01-pooler
+    container_name: pgonrails-pooler
     build: ./pooler
     restart: unless-stopped
     ports:
-      - 6432:5432
+      - 6432:${POOLER_PORT}
     depends_on:
       db:
         condition: service_healthy
     environment:
-      LISTEN_ADDR: "*"
-      AUTH_TYPE: scram-sha-256
+      LISTEN_ADDR: ${POOLER_LISTEN}
+      LISTEN_PORT: ${POOLER_PORT}
+      
       DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_HOST: ${POSTGRES_HOST}
-      DB_PORT: ${POSTGRES_PORT}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 100
       DEFAULT_POOL_SIZE: 20
-      
-
-volumes:
-  db-config:

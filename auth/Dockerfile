@@ -9,4 +9,4 @@ RUN apk add darkhttpd
 USER supabase
 
 # Run file server and auth server in parallel
-ENTRYPOINT /bin/sh -c 'darkhttpd /home/mailer/templates --port 8080 --addr 127.0.0.1 & auth'
+ENTRYPOINT darkhttpd /home/mailer/templates --port 8080 --addr 127.0.0.1 & auth

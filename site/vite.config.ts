@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react(), UnoCSS(), tsconfigPaths()],
   // base: '/site',
   server: {
-    host: '::',                                       // Accept connections from all interfaces
+    host: process.env.VITE_HOST || '::',              // Accept connections from all interfaces
     port: parseInt(process.env.VITE_PORT || '5173'),  // Look for VITE_PORT in startup environment
     strictPort: true,                                 // Fail if port is taken
     watch: {
