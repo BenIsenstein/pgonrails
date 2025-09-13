@@ -12,5 +12,5 @@ serve(async () => {
 })
 
 // To invoke:
-// curl 'http://localhost:<KONG_HTTP_PORT>/functions/v1/hello' \
+// curl 'http://localhost:<KONG_PORT>/functions/v1/hello' \
 //   --header 'Authorization: Bearer <anon/service_role API key>'

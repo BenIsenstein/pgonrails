@@ -23,7 +23,7 @@ services:
       VITE_HOST: ${SITE_LISTEN}
       VITE_PORT: ${SITE_PORT}
 
-      VITE_SUPABASE_API_URL: http://localhost:${KONG_HTTP_PORT}
+      VITE_SUPABASE_API_URL: http://localhost:${KONG_PORT}
       VITE_SUPABASE_API_KEY: ${ANON_KEY}
 
   studio:
@@ -31,19 +31,13 @@ services:
     build: ./studio
     restart: unless-stopped
     healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})"
-        ]
+      test: [ "CMD", "node", "-e", "fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})" ]
       timeout: 10s
       interval: 5s
       retries: 3
     environment:
-      SUPABASE_URL: http://${KONG_HOST}:${KONG_HTTP_PORT}
-      SUPABASE_PUBLIC_URL: http://localhost:${KONG_HTTP_PORT}
+      SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
+      SUPABASE_PUBLIC_URL: http://localhost:${KONG_PORT}
       STUDIO_PG_META_URL: http://${META_HOST}:${META_PORT}
 
       SUPABASE_ANON_KEY: ${ANON_KEY}
@@ -61,9 +55,9 @@ services:
     build: ./kong
     restart: unless-stopped
     ports:
-      - ${KONG_HTTP_PORT}:${KONG_HTTP_PORT}/tcp
+      - ${KONG_PORT}:${KONG_PORT}/tcp
     environment:
-      KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_HTTP_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_HTTP_PORT} reuseport backlog=16384
+      KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_PORT} reuseport backlog=16384
       # To find the IP address of services, Kong looks for SRV records by default, which don't exist in the Docker Compose internal network DNS
       KONG_DNS_ORDER: LAST,A,CNAME
 
@@ -72,6 +66,7 @@ services:
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_NGINX_WORKER_PROCESSES: 2
 
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
@@ -97,22 +92,16 @@ services:
     container_name: pgonrails-auth
     build: ./auth
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:9999/health"
-        ]
-      timeout: 5s
-      interval: 5s
-      retries: 3
+    volumes:
+      - ./auth/templates:/home/mailer/templates
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health" ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
       GOTRUE_API_HOST: ${AUTH_LISTEN}
       GOTRUE_API_PORT: ${AUTH_PORT}
@@ -120,7 +109,7 @@ services:
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
-      API_EXTERNAL_URL: http://localhost:${KONG_HTTP_PORT}
+      API_EXTERNAL_URL: http://localhost:${KONG_PORT}
       GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
 
       GOTRUE_JWT_ADMIN_ROLES: service_role
@@ -144,8 +133,6 @@ services:
       GOTRUE_MAILER_TEMPLATES_RECOVERY: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/recovery.html
       GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/magiclink.html
       GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/emailchange.html
-    volumes:
-      - ./auth/templates:/home/mailer/templates
 
   rest:
     container_name: pgonrails-rest
@@ -168,25 +155,14 @@ services:
 
   realtime:
     # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
-    container_name: realtime-dev.pgonrails-realtime
+    container_name: default-tenant.pgonrails-realtime
     build: ./realtime
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-sSfL",
-          "--head",
-          "-o",
-          "/dev/null",
-          "-H",
-          "Authorization: Bearer ${ANON_KEY}",
-          "http://localhost:4000/api/tenants/realtime-dev/health"
-        ]
+      test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:4000/api/tenants/default-tenant/health" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -207,6 +183,7 @@ services:
       DNS_NODES: "''"
       RLIMIT_NOFILE: 10000
       APP_NAME: realtime
+      SELF_HOST_TENANT_NAME: default-tenant
       SEED_SELF_HOST: true
       RUN_JANITOR: true
 
@@ -215,15 +192,7 @@ services:
     build: ./storage
     restart: unless-stopped
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://storage:5000/status"
-        ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:5000/status" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -303,19 +272,14 @@ services:
     container_name: pgonrails-imgproxy
     build: ./imgproxy
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "imgproxy",
-          "health"
-        ]
-      timeout: 5s
-      interval: 5s
-      retries: 3
     depends_on:
       minio:
         condition: service_started
+    healthcheck:
+      test: [ "CMD", "imgproxy", "health" ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
       IMGPROXY_BIND: ${IMGPROXY_LISTEN}:${IMGPROXY_PORT}
 
@@ -327,25 +291,26 @@ services:
       IMGPROXY_USE_ETAG: true
       IMGPROXY_ENABLE_WEBP_DETECTION: true
       IMGPROXY_JPEG_PROGRESSIVE: true
+      IMGPROXY_IGNORE_SSL_VERIFICATION: true
       
   minio:
-    build: ./minio
     container_name: pgonrails-minio
+    build: ./minio
+    restart: unless-stopped
     ports:
       - ${S3_PORT}:${S3_PORT}
       - ${S3_CONSOLE_PORT}:${S3_CONSOLE_PORT}
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./volumes/storage:/data:z
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://minio:9000/minio/health/live" ]
       interval: 2s
       timeout: 10s
       retries: 5
-    volumes:
-      - ./volumes/storage:/data:z
-    restart: unless-stopped
-
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    
   meta:
     container_name: pgonrails-meta
     build: ./meta
@@ -372,7 +337,7 @@ services:
       EDGE_RUNTIME_PORT: ${FUNCTIONS_PORT}
 
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-      SUPABASE_URL: http://${KONG_HOST}:${KONG_HTTP_PORT}
+      SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
       
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
@@ -385,23 +350,15 @@ services:
     container_name: pgonrails-db
     build: ./db
     restart: unless-stopped
+    ports:
+      - ${DB_PORT}:${DB_PORT}
     volumes:
       - ./volumes/db/data:/var/lib/postgresql/data:Z
     healthcheck:
-      test:
-        [
-        "CMD",
-        "pg_isready",
-        "-U",
-        "postgres",
-        "-h",
-        "localhost"
-        ]
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-h", "localhost" ]
       interval: 5s
       timeout: 5s
       retries: 10
-    ports:
-      - ${DB_PORT}:${DB_PORT}
     environment:
       LISTEN_ADDRESSES: ${DB_LISTEN}
       PGPORT: ${DB_PORT}
