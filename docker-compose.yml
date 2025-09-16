@@ -148,7 +148,9 @@ services:
 
   rest:
     container_name: pgonrails-rest
-    build: ./rest
+    build:
+      context: ./rest
+      dockerfile: dev.Dockerfile
     restart: unless-stopped
     depends_on:
       db:
