@@ -1,4 +1,0 @@
-CREATE TABLE events (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100)
-)
