@@ -4,6 +4,22 @@ This is a Docker Compose setup for self-hosting Supabase. It has been tweaked to
 
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
+## Get Started
+
+Setup environment and volumes
+
+`./setup.sh`
+
+Run the app locally
+
+`docker compose up`
+
+Visit the supabase studio at http://localhost:8000
+
+Visit the frontend site in dev mode at http://localhost:5173
+
+Happy hacking!
+
 ## Features
 
 ### Sane and simple defaults
@@ -68,19 +84,3 @@ Make sure the email signup and SMTP environment variables are set:
     SMTP_PASS="abcd efgh ijkl mnop"
     SMTP_SENDER_NAME="PG On Rails"
 ```
-
-## Get Started
-
-Setup environment and volumes
-
-`./setup.sh`
-
-Run the app locally
-
-`docker compose up`
-
-Visit the supabase studio at http://localhost:8000
-
-Visit the frontend site in dev mode at http://localhost:5173
-
-Happy hacking!
