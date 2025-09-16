@@ -19,6 +19,11 @@ services:
       - ${SITE_PORT}:${SITE_PORT}
     volumes:
       - ./site:/app
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${SITE_PORT}" ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       VITE_HOST: ${SITE_LISTEN}
       VITE_PORT: ${SITE_PORT}
@@ -31,7 +36,7 @@ services:
     build: ./studio
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "node", "-e", "fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})" ]
+      test: [ "CMD", "node", "-e", "fetch('http://studio:${STUDIO_PORT}/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})" ]
       timeout: 10s
       interval: 5s
       retries: 3
@@ -57,8 +62,14 @@ services:
     restart: unless-stopped
     ports:
       - ${KONG_PORT}:${KONG_PORT}/tcp
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${KONG_STATUS_PORT}/status" ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_PORT} reuseport backlog=16384
+      KONG_STATUS_LISTEN: "[::]:${KONG_STATUS_PORT}, 0.0.0.0:${KONG_STATUS_PORT}"
       # To find the IP address of services, Kong looks for SRV records by default, which don't exist in the Docker Compose internal network DNS
       KONG_DNS_ORDER: LAST,A,CNAME
 
@@ -99,7 +110,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health" ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${AUTH_PORT}/health" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -142,9 +153,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${REST_ADMIN_PORT}/live"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
       PGRST_SERVER_HOST: ${REST_LISTEN}
       PGRST_SERVER_PORT: ${REST_PORT}
+      PGRST_ADMIN_SERVER_HOST: ${REST_LISTEN}
+      PGRST_ADMIN_SERVER_PORT: ${REST_ADMIN_PORT}
 
       PGRST_DB_URI: postgres://authenticator:${DB_AUTHENTICATOR_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       PGRST_DB_SCHEMAS: public,storage,graphql_public
@@ -163,7 +181,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:4000/api/tenants/default-tenant/health" ]
+      test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:${REALTIME_PORT}/api/tenants/default-tenant/health" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -193,7 +211,7 @@ services:
     build: ./storage
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:5000/status" ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:${STORAGE_PORT}/status" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -319,6 +337,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:${META_PORT}/health').then((r) => {if (r.status !== 200) throw new Error(r.status)})"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
     environment:
       PG_META_HOST: ${META_LISTEN}
       PG_META_PORT: ${META_PORT}
@@ -333,6 +356,11 @@ services:
     container_name: pgonrails-edge-functions
     build: ./functions
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${FUNCTIONS_PORT}/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
     environment:
       EDGE_RUNTIME_LISTEN: ${FUNCTIONS_LISTEN}
       EDGE_RUNTIME_PORT: ${FUNCTIONS_PORT}
