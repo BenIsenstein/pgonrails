@@ -36,6 +36,7 @@ services:
       interval: 5s
       retries: 3
     environment:
+      PORT: ${STUDIO_PORT}
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
       SUPABASE_PUBLIC_URL: http://localhost:${KONG_PORT}
       STUDIO_PG_META_URL: http://${META_HOST}:${META_PORT}
@@ -43,7 +44,7 @@ services:
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD}
       AUTH_JWT_SECRET: ${JWT_SECRET}
 
       DEFAULT_ORGANIZATION_NAME: Default Organization
@@ -107,7 +108,7 @@ services:
       GOTRUE_API_PORT: ${AUTH_PORT}
 
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${DB_AUTH_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
       API_EXTERNAL_URL: http://localhost:${KONG_PORT}
       GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
@@ -145,7 +146,7 @@ services:
       PGRST_SERVER_HOST: ${REST_LISTEN}
       PGRST_SERVER_PORT: ${REST_PORT}
 
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      PGRST_DB_URI: postgres://authenticator:${DB_AUTHENTICATOR_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       PGRST_DB_SCHEMAS: public,storage,graphql_public
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
@@ -171,7 +172,7 @@ services:
       PORT: ${REALTIME_PORT}
 
       DB_USER: supabase_admin
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PASSWORD: ${DB_SUPERUSER_PASSWORD}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
@@ -216,8 +217,8 @@ services:
       AUTH_JWT_ALGORITHM: HS256
 
       # Database
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-      DATABASE_POOL_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POOLER_HOST}:${POOLER_PORT}/${DB_NAME}
+      DATABASE_URL: postgres://supabase_storage_admin:${DB_STORAGE_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      DATABASE_POOL_URL: postgres://supabase_storage_admin:${DB_STORAGE_PASSWORD}@${POOLER_HOST}:${POOLER_PORT}/${DB_NAME}
       DATABASE_CONNECTION_TIMEOUT: 3000
 
       # Migrations
@@ -323,7 +324,7 @@ services:
       PG_META_PORT: ${META_PORT}
 
       PG_META_DB_USER: supabase_admin
-      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_DB_PASSWORD: ${DB_SUPERUSER_PASSWORD}
       PG_META_DB_HOST: ${DB_HOST}
       PG_META_DB_PORT: ${DB_PORT}
       PG_META_DB_NAME: ${DB_NAME}
@@ -336,7 +337,7 @@ services:
       EDGE_RUNTIME_LISTEN: ${FUNCTIONS_LISTEN}
       EDGE_RUNTIME_PORT: ${FUNCTIONS_PORT}
 
-      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      SUPABASE_DB_URL: postgresql://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
       
       SUPABASE_ANON_KEY: ${ANON_KEY}
@@ -366,10 +367,16 @@ services:
 
       # "POSTGRES_HOST" here means a local socket address inside the container to run on and perform setup migrations
       POSTGRES_HOST: /var/run/postgresql
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${DB_SUPERUSER_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD}
       PGDATABASE: ${DB_NAME}
       POSTGRES_DB: ${DB_NAME}
+
+      DB_AUTHENTICATOR_PASSWORD: ${DB_AUTHENTICATOR_PASSWORD}
+      DB_PGBOUNCER_PASSWORD: ${DB_PGBOUNCER_PASSWORD}
+      DB_AUTH_PASSWORD: ${DB_AUTH_PASSWORD}
+      DB_WEBHOOKS_PASSWORD: ${DB_WEBHOOKS_PASSWORD}
+      DB_STORAGE_PASSWORD: ${DB_STORAGE_PASSWORD}
 
       PGDATA: /var/lib/postgresql/data/pgdata
       JWT_SECRET: ${JWT_SECRET}
@@ -388,11 +395,12 @@ services:
       LISTEN_ADDR: ${POOLER_LISTEN}
       LISTEN_PORT: ${POOLER_PORT}
       
-      DB_USER: supabase_admin
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_USER: pgbouncer
+      DB_PASSWORD: ${DB_PGBOUNCER_PASSWORD}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
 
+      AUTH_QUERY: SELECT * FROM pgbouncer.get_auth($1)
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 100
