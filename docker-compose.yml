@@ -10,7 +10,6 @@ name: pgonrails
 services:
 
   site:
-    container_name: pgonrails-site
     build:
       context: ./site
       dockerfile: dev.Dockerfile
@@ -32,7 +31,6 @@ services:
       VITE_SUPABASE_API_KEY: ${ANON_KEY}
 
   studio:
-    container_name: pgonrails-studio
     build: ./studio
     restart: unless-stopped
     healthcheck:
@@ -52,12 +50,11 @@ services:
       POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD}
       AUTH_JWT_SECRET: ${JWT_SECRET}
 
-      DEFAULT_ORGANIZATION_NAME: Default Organization
-      DEFAULT_PROJECT_NAME: Default Project
+      DEFAULT_ORGANIZATION_NAME: My Org
+      DEFAULT_PROJECT_NAME: PG On Rails
       
 
   kong:
-    container_name: pgonrails-kong
     build: ./kong
     restart: unless-stopped
     ports:
@@ -101,7 +98,6 @@ services:
       STORAGE_PORT: ${STORAGE_PORT}
 
   auth:
-    container_name: pgonrails-auth
     build: ./auth
     restart: unless-stopped
     volumes:
@@ -122,7 +118,8 @@ services:
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${DB_AUTH_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
       API_EXTERNAL_URL: http://localhost:${KONG_PORT}
-      GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
+      GOTRUE_SITE_URL: http://localhost:3000 # temporary pointing to my NextJS app running outside docker compose stack
+      # GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
 
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
@@ -130,24 +127,39 @@ services:
       GOTRUE_JWT_EXP: ${JWT_EXPIRY}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
 
+      # To change their password, users must provide a OTP from their email or phone
+      GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: true
+
       GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
       GOTRUE_SMTP_HOST: ${SMTP_HOST}
       GOTRUE_SMTP_PORT: ${SMTP_PORT}
       GOTRUE_SMTP_USER: ${SMTP_USER}
       GOTRUE_SMTP_PASS: ${SMTP_PASS}
       GOTRUE_SMTP_SENDER_NAME: "PG On Rails"
+
+      # GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_MAILER_EXTERNAL_HOSTS: kong,site,localhost
+
       GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+
+      # The default subject for the OTP email is cringe and needs to be overridden
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: "Your One-Time Passcode"
+
       GOTRUE_MAILER_TEMPLATES_INVITE: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/invite.html
       GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/confirmation.html
       GOTRUE_MAILER_TEMPLATES_RECOVERY: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/recovery.html
       GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/magiclink.html
       GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/emailchange.html
-
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/reauthentication.html
+      GOTRUE_MAILER_TEMPLATES_PASSWORD_CHANGED_NOTIFICATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/passwordchanged.html
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGED_NOTIFICATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/emailchanged.html
+      GOTRUE_MAILER_TEMPLATES_PHONE_CHANGED_NOTIFICATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/phonechanged.html
+      GOTRUE_MAILER_TEMPLATES_MFA_FACTOR_ENROLLED_NOTIFICATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/mfafactorenrolled.html
+      GOTRUE_MAILER_TEMPLATES_MFA_FACTOR_UNENROLLED_NOTIFICATION: ${AUTH_LOCAL_MAILER_TEMPLATES_URL}/mfafactorunenrolled.html
   rest:
-    container_name: pgonrails-rest
     build:
       context: ./rest
       dockerfile: dev.Dockerfile
@@ -209,7 +221,6 @@ services:
       RUN_JANITOR: true
 
   storage:
-    container_name: pgonrails-storage
     build: ./storage
     restart: unless-stopped
     healthcheck:
@@ -238,7 +249,7 @@ services:
 
       # Database
       DATABASE_URL: postgres://supabase_storage_admin:${DB_STORAGE_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-      DATABASE_POOL_URL: postgres://supabase_storage_admin:${DB_STORAGE_PASSWORD}@${POOLER_HOST}:${POOLER_PORT}/${DB_NAME}
+      DATABASE_POOL_URL: postgres://supabase_storage_admin:${DB_STORAGE_PASSWORD}@${PGBOUNCER_HOST}:${PGBOUNCER_PORT}/${DB_NAME}
       DATABASE_CONNECTION_TIMEOUT: 3000
 
       # Migrations
@@ -255,11 +266,11 @@ services:
       STORAGE_S3_FORCE_PATH_STYLE: true
       STORAGE_S3_MAX_SOCKETS: 200
       STORAGE_S3_REGION: default-region
-      STORAGE_S3_BUCKET: default-bucket  # name of top-level bucket. objects are stored in a structure of <top-level-bucket>/<tenant>/<supabase-bucket>/<object>
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}  # name of top-level bucket. objects are stored in a structure of <top-level-bucket>/<tenant>/<supabase-bucket>/<object>
       TENANT_ID: default-tenant
 
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${S3_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET}
 
       # Upload
       FILE_SIZE_LIMIT: 52428800
@@ -290,7 +301,6 @@ services:
       PGRST_JWT_SECRET: ${JWT_SECRET}
       
   imgproxy:
-    container_name: pgonrails-imgproxy
     build: ./imgproxy
     restart: unless-stopped
     depends_on:
@@ -306,8 +316,8 @@ services:
 
       IMGPROXY_USE_S3: true
       IMGPROXY_S3_ENDPOINT: http://${S3_HOST}:${S3_PORT}
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${S3_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET}
 
       IMGPROXY_USE_ETAG: true
       IMGPROXY_ENABLE_WEBP_DETECTION: true
@@ -315,7 +325,6 @@ services:
       IMGPROXY_IGNORE_SSL_VERIFICATION: true
       
   minio:
-    container_name: pgonrails-minio
     build: ./minio
     restart: unless-stopped
     ports:
@@ -329,11 +338,11 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${S3_ID}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET}
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
     
   meta:
-    container_name: pgonrails-meta
     build: ./meta
     restart: unless-stopped
     depends_on:
@@ -355,9 +364,10 @@ services:
       PG_META_DB_NAME: ${DB_NAME}
 
   functions:
-    container_name: pgonrails-edge-functions
     build: ./functions
     restart: unless-stopped
+    volumes:
+      - ./functions/functions:/home/deno/functions
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${FUNCTIONS_PORT}/health"]
       interval: 5s
@@ -378,7 +388,6 @@ services:
       VERIFY_JWT: false
 
   db:
-    container_name: pgonrails-db
     build: ./db
     restart: unless-stopped
     ports:
@@ -412,18 +421,17 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
 
-  pooler:
-    container_name: pgonrails-pooler
-    build: ./pooler
+  pgbouncer:
+    build: ./pgbouncer
     restart: unless-stopped
     ports:
-      - 6432:${POOLER_PORT}
+      - 6432:${PGBOUNCER_PORT}
     depends_on:
       db:
         condition: service_healthy
     environment:
-      LISTEN_ADDR: ${POOLER_LISTEN}
-      LISTEN_PORT: ${POOLER_PORT}
+      LISTEN_ADDR: ${PGBOUNCER_LISTEN}
+      LISTEN_PORT: ${PGBOUNCER_PORT}
       
       DB_USER: pgbouncer
       DB_PASSWORD: ${DB_PGBOUNCER_PASSWORD}
