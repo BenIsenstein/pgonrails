@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.next
 node_modules
 dist
 dist-ssr
@@ -22,6 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+next-env.d.ts
 
 .env
 .terraform
