@@ -276,11 +276,16 @@ export default function BoardPage() {
     })
     
     useEffect(() => {
-        if (!id) return
-        if (!user?.user_metadata?.full_name) return
+        if (!id || !user?.user_metadata?.full_name || user?.id) {
+            return
+        }
 
         console.log("running REALTIME CHANNEL EFFECT")
-        const room = supabase.channel(`board:${id}`)
+        const room = supabase.channel(`board:${id}`,{
+            config: {
+                presence: { key: user?.id }
+            }
+        })
 
         room.on('presence', { event: 'sync' }, () => {
             console.log('Presence sync')
@@ -314,6 +319,7 @@ export default function BoardPage() {
         id,
         mergeState,
         supabase,
+        user?.id,
         user?.user_metadata?.full_name,
         user?.user_metadata?.avatar_img_name,
         user?.user_metadata?.avatar_img_cb
