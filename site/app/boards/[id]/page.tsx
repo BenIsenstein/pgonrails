@@ -276,14 +276,14 @@ export default function BoardPage() {
     })
     
     useEffect(() => {
-        if (!id || !user?.user_metadata?.full_name || user?.id) {
+        if (!id || !user?.user_metadata?.full_name || !user?.id) {
             return
         }
 
         console.log("running REALTIME CHANNEL EFFECT")
         const room = supabase.channel(`board:${id}`,{
             config: {
-                presence: { key: user?.id }
+                presence: { key: user.id }
             }
         })
 
@@ -306,9 +306,9 @@ export default function BoardPage() {
             }
 
             await room.track({
-                full_name: user?.user_metadata?.full_name,
-                avatar_img_name: user?.user_metadata?.avatar_img_name,
-                avatar_img_cb: user?.user_metadata?.avatar_img_cb,
+                full_name: user.user_metadata.full_name,
+                avatar_img_name: user.user_metadata.avatar_img_name,
+                avatar_img_cb: user.user_metadata.avatar_img_cb,
             })
         })
 
