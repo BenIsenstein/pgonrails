@@ -25,6 +25,7 @@ services:
       retries: 3
     environment:
       PORT: ${SITE_PORT}
+      HOSTNAME: ${SITE_LISTEN}
 
       NEXT_PUBLIC_SITE_URL: http://localhost:${SITE_PORT}
       NEXT_PUBLIC_SUPABASE_URL: http://localhost:${KONG_PORT}
