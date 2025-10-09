@@ -276,30 +276,36 @@ export default function BoardPage() {
     })
     
     useEffect(() => {
+        if (!id) return
+        if (!user?.user_metadata?.full_name) return
+
+        console.log("running REALTIME CHANNEL EFFECT")
         const room = supabase.channel(`board:${id}`)
 
-        room
-            .on('presence', { event: 'sync' }, () => {
-                const newState = room.presenceState<BoardUser>()
-                const liveUsers: Record<string, BoardUser> = {}
+        room.on('presence', { event: 'sync' }, () => {
+            console.log('Presence sync')
+            const newState = room.presenceState<BoardUser>()
+            const liveUsers: Record<string, BoardUser> = {}
 
-                for (const key in newState) {
-                    liveUsers[key] = newState[key][0]
-                }
+            for (const key in newState) {
+                liveUsers[key] = newState[key][0]
+            }
 
-                mergeState({ liveUsers })
+            mergeState({ liveUsers })
+        })
+
+        room.subscribe(async (status) => {
+            console.log('Subscription status', status)
+            if (status !== 'SUBSCRIBED') {
+                return
+            }
+
+            await room.track({
+                full_name: user?.user_metadata?.full_name,
+                avatar_img_name: user?.user_metadata?.avatar_img_name,
+                avatar_img_cb: user?.user_metadata?.avatar_img_cb,
             })
-            .subscribe(async (status) => {
-                if (status !== 'SUBSCRIBED') {
-                    return
-                }
-
-                await room.track({
-                    full_name: user?.user_metadata?.full_name,
-                    avatar_img_name: user?.user_metadata?.avatar_img_name,
-                    avatar_img_cb: user?.user_metadata?.avatar_img_cb,
-                })
-            })
+        })
 
         return () => {
             supabase.removeChannel(room)
