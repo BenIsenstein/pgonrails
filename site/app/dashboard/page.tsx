@@ -271,7 +271,7 @@ export default function DashboardPage() {
                         state.viewMode === "grid" ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                                 {filteredBoards.map(board => (
-                                    <Link href={`/boards/${board.id}`} key={board.id}>
+                                    <Link prefetch={false} href={`/boards/${board.id}`} key={board.id}>
                                         <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
                                             <CardHeader className="pb-3">
                                                 <div className="flex items-center justify-between">
@@ -319,7 +319,7 @@ export default function DashboardPage() {
                             <div>
                                 {boards.map((board, idx) => (
                                     <div key={board.id} className={idx > 0 ? "mt-4" : ""}>
-                                        <Link href={`/boards/${board.id}`}>
+                                        <Link prefetch={false} href={`/boards/${board.id}`}>
                                             <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
                                                 <CardHeader className="pb-3">
                                                     <div className="flex items-center justify-between">

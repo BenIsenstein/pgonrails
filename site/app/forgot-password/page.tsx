@@ -19,10 +19,10 @@ export default function ForgotPassword() {
                     <ForgotPasswordForm />
                 </CardContent>
                 <CardFooter className="flex-col text-center">
-                    <Link className="w-full text-sm text-muted-foreground " href="/signin">
+                    <Link prefetch={false} className="w-full text-sm text-muted-foreground " href="/signin">
                         Remember your password? Sign in
                     </Link>
-                    <Link className="w-full text-sm text-muted-foreground" href="/signup">
+                    <Link prefetch={false} className="w-full text-sm text-muted-foreground" href="/signup">
                         Don't have an account? Sign up
                     </Link>
                 </CardFooter>

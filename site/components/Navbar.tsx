@@ -38,7 +38,7 @@ export default function Navbar({ boardTitle, onEditBoard, onFilterClick, filterC
         return (
             <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center space-x-2">
+                    <Link prefetch={false} href="/" className="flex items-center space-x-2">
                         <Trello className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                         <span className="text-xl sm:text-2xl font-bold text-gray-900">Trello Clone</span>
                     </Link>
@@ -94,6 +94,7 @@ export default function Navbar({ boardTitle, onEditBoard, onFilterClick, filterC
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                             <Link
+                                prefetch={false}
                                 href="/dashboard"
                                 className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 flex-shrink-0"
                             >
@@ -152,14 +153,14 @@ export default function Navbar({ boardTitle, onEditBoard, onFilterClick, filterC
     return (
         <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
             <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-                <Link href="/" className="flex items-center space-x-2">
+                <Link prefetch={false} href="/" className="flex items-center space-x-2">
                     <Trello className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                     <span className="text-xl sm:text-2xl font-bold text-gray-900">Trello Clone</span>
                 </Link>
                 <div className="flex items-center space-x-2 sm:space-x-4">
                     {user && (
                         <div className="flex items-center space-x-4 md:space-x-8">
-                            <Link href="/dashboard">
+                            <Link prefetch={false} href="/dashboard">
                                 <Button size="sm" className="text-xs sm:text-sm cursor-pointer">
                                     Dashboard <ArrowRight />
                                 </Button>
@@ -208,12 +209,12 @@ export default function Navbar({ boardTitle, onEditBoard, onFilterClick, filterC
                     )}
                     {!user && (
                         <div className="space-x-2">
-                            <Link href="/signin">
+                            <Link prefetch={false} href="/signin">
                                 <Button size="sm" variant="outline" className="text-xs sm:text-sm">
                                     Sign In
                                 </Button>
                             </Link>
-                            <Link href="/signup">
+                            <Link prefetch={false} href="/signup">
                                 <Button size="sm" className="text-xs sm:text-sm">
                                     Sign Up
                                 </Button>

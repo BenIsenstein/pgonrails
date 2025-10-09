@@ -52,7 +52,7 @@ export default async function Home() {
 
           {!data.user && (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link prefetch={false} href="/signup">
                 <Button size="lg" className="text-lg px-8">
                   Start for free
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -111,7 +111,7 @@ export default async function Home() {
           </p>
 
           {!data.user && (
-            <Link href="/signup">
+            <Link prefetch={false} href="/signup">
               <Button size="lg" variant="secondary" className="text-lg px-8">
                 Start your free trial
                 <ArrowRight className="ml-2 h-5 w-5" />

@@ -11,7 +11,7 @@ export default function Signup() {
             <Card className="w-[350px] mx-auto">
                 <CardHeader className="space-y-1">
                     <div className="flex justify-center py-4">
-                        <Link href='/'>
+                        <Link prefetch={false} href='/'>
                             <Image src="/logo.png" alt="logo" width={50} height={50} />
                         </Link>
                     </div>
@@ -32,7 +32,7 @@ export default function Signup() {
                     <ProviderSigninBlock /> */}
                 </CardContent>
                 <CardFooter className="flex-col text-center">
-                    <Link className="w-full text-sm text-muted-foreground hover:underline" href="/signin">
+                    <Link prefetch={false} className="w-full text-sm text-muted-foreground hover:underline" href="/signin">
                         Have an account? Sign in
                     </Link>
                 </CardFooter>
