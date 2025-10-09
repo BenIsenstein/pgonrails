@@ -1,0 +1,1 @@
+export const STORAGE_KEY = process.env.NEXT_PUBLIC_AUTH_STORAGE_KEY || 'pgonrails-session'

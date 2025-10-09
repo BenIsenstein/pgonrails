@@ -19,16 +19,19 @@ services:
     volumes:
       - ./site:/app
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${SITE_PORT}" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:${SITE_PORT}/health" ]
       timeout: 10s
       interval: 5s
       retries: 3
     environment:
-      VITE_HOST: ${SITE_LISTEN}
-      VITE_PORT: ${SITE_PORT}
+      PORT: ${SITE_PORT}
 
-      VITE_SUPABASE_API_URL: http://localhost:${KONG_PORT}
-      VITE_SUPABASE_API_KEY: ${ANON_KEY}
+      NEXT_PUBLIC_SITE_URL: http://localhost:${SITE_PORT}
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:${KONG_PORT}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
+      
+      SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
 
   studio:
     build: ./studio
@@ -118,8 +121,7 @@ services:
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${DB_AUTH_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
       API_EXTERNAL_URL: http://localhost:${KONG_PORT}
-      GOTRUE_SITE_URL: http://localhost:3000 # temporary pointing to my NextJS app running outside docker compose stack
-      # GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
+      GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
 
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
@@ -187,15 +189,17 @@ services:
       PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
 
   realtime:
-    # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
-    container_name: default-tenant.pgonrails-realtime
+    # Realtime needs a tenant id as the subdomain in every request. The docker compose internal network DNS
+    # doesn't allow this dynamically just using the service name (*.realtime). But explicitly naming the container
+    # will route requests there, achieving the necessary effect for our single self-hosted tenant.
+    container_name: ${DEFAULT_TENANT}.pgonrails-realtime
     build: ./realtime
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:${REALTIME_PORT}/api/tenants/default-tenant/health" ]
+      test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:${REALTIME_PORT}/api/tenants/${DEFAULT_TENANT}/health" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -216,7 +220,7 @@ services:
       DNS_NODES: "''"
       RLIMIT_NOFILE: 10000
       APP_NAME: realtime
-      SELF_HOST_TENANT_NAME: default-tenant
+      SELF_HOST_TENANT_NAME: ${DEFAULT_TENANT}
       SEED_SELF_HOST: true
       RUN_JANITOR: true
 
@@ -267,7 +271,7 @@ services:
       STORAGE_S3_MAX_SOCKETS: 200
       STORAGE_S3_REGION: default-region
       STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}  # name of top-level bucket. objects are stored in a structure of <top-level-bucket>/<tenant>/<supabase-bucket>/<object>
-      TENANT_ID: default-tenant
+      TENANT_ID: ${DEFAULT_TENANT}
 
       AWS_ACCESS_KEY_ID: ${S3_ID}
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET}

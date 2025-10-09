@@ -1,5 +1,5 @@
-FROM node:20
+FROM oven/bun:1.2.23
 
 WORKDIR /app
 
-ENTRYPOINT npm i && npm run dev
+ENTRYPOINT bun install && bun --bun run dev
