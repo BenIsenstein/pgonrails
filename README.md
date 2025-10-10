@@ -4,6 +4,8 @@ This is a Docker Compose setup for self-hosting Supabase. It has been tweaked to
 
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/5ArOQi?referralCode=Hwex-j&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 ## Get Started
 
 Setup environment and volumes
