@@ -24,8 +24,8 @@ services:
       interval: 5s
       retries: 3
     environment:
-      PORT: ${SITE_PORT}
       HOSTNAME: ${SITE_LISTEN}
+      PORT: ${SITE_PORT}
 
       NEXT_PUBLIC_SITE_URL: http://localhost:${SITE_PORT}
       NEXT_PUBLIC_SUPABASE_URL: http://localhost:${KONG_PORT}
@@ -43,6 +43,7 @@ services:
       interval: 5s
       retries: 3
     environment:
+      HOSTNAME: ${STUDIO_LISTEN}
       PORT: ${STUDIO_PORT}
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
       SUPABASE_PUBLIC_URL: http://localhost:${KONG_PORT}
