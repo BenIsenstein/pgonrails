@@ -82,19 +82,31 @@ export const AppContextProvider: React.FC<PropsWithChildren> = ({ children }) =>
   useEffect(() => {
     if (searchParams.has("refresh_browser_auth")) {
       supabase.auth.getSession().then(response => {
+        const newParams = new URLSearchParams(searchParams)
+        newParams.delete("refresh_browser_auth")
+        const queryString = newParams.toString()
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname)
         mergeState({ user: response.data.session?.user || null })
-        router.replace(pathname)
       })
     }
     
     if (searchParams.has("message")) {
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete("message")
+      const queryString = newParams.toString()
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname)
       toast("Message", {
         description: searchParams.get("message")
       })
-      router.replace(pathname)
     }
 
     if (searchParams.has("error")) {
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete("error")
+      newParams.delete("error_code")
+      newParams.delete("error_description")
+      const queryString = newParams.toString()
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname)
       toast("Error", {
         description: (
           <div className="space-y-1">

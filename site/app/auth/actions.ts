@@ -56,7 +56,8 @@ export async function signup(currentState: { message: string }, formData: FormDa
                 full_name,
                 first_name: full_name.split(" ")[0],
                 last_name: full_name.split(" ").reverse()[0],
-                avatar_img_name: ""
+                avatar_img_name: "",
+                avatar_img_cb: ""
             }
         }
     })
@@ -77,6 +78,11 @@ export async function signup(currentState: { message: string }, formData: FormDa
         return {
             message: "Failed to create user"
         }
+    }
+
+    // Redirect straight to dashboard if they are auto-confirming emails
+    if (signUpData.user.user_metadata.email_verified) {
+        redirect("/dashboard?message=Welcome!+You+successfully+signed+up.&refresh_browser_auth")
     }
 
     redirect("/signup?message=Please+check+your+email+to+confirm+your+signup.")
