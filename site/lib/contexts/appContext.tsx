@@ -3,7 +3,6 @@
 import { PropsWithChildren, createContext, useContext, useEffect } from "react"
 import { AuthError, SupabaseClient, User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase/client"
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { MergeStateFunction, useMergeState } from "../hooks/useMergeState";
 import { toast } from "sonner";
 
@@ -39,9 +38,6 @@ export const AppContextProvider: React.FC<PropsWithChildren> = ({ children }) =>
     user: null as User | null,
     error: null as AuthError | null,
   })
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const router = useRouter()
 
   const clearError = () => mergeState({ error: null })
 
@@ -78,56 +74,6 @@ export const AppContextProvider: React.FC<PropsWithChildren> = ({ children }) =>
 
     return () => listener.data.subscription.unsubscribe()
   }, [mergeState])
-
-  useEffect(() => {
-    if (searchParams.has("refresh_browser_auth")) {
-      supabase.auth.getSession().then(response => {
-        const newParams = new URLSearchParams(searchParams)
-        newParams.delete("refresh_browser_auth")
-        const queryString = newParams.toString()
-        router.replace(queryString ? `${pathname}?${queryString}` : pathname)
-        mergeState({ user: response.data.session?.user || null })
-      })
-    }
-    
-    if (searchParams.has("message")) {
-      const newParams = new URLSearchParams(searchParams)
-      newParams.delete("message")
-      const queryString = newParams.toString()
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname)
-      toast("Message", {
-        description: searchParams.get("message")
-      })
-    }
-
-    if (searchParams.has("error")) {
-      const newParams = new URLSearchParams(searchParams)
-      newParams.delete("error")
-      newParams.delete("error_code")
-      newParams.delete("error_description")
-      const queryString = newParams.toString()
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname)
-      toast("Error", {
-        description: (
-          <div className="space-y-1">
-            <div>{searchParams.get("error")}</div>
-
-            {searchParams.has("error_code") && (
-              <div>{searchParams.get("error_code")}</div>
-            )}
-
-            {searchParams.has("error_description") && (
-              <>
-                <hr className="mt-2 mb-2" />
-                <div >{searchParams.get("error_description")}</div>
-              </>
-            )}
-          </div>
-        )
-      })
-      router.replace(pathname)
-    }
-  }, [pathname, searchParams, router, mergeState])
 
   const value = {
     ...state,
