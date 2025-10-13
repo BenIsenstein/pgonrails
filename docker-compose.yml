@@ -1,6 +1,7 @@
 # Usage
 #   Setup:              ./setup.sh
 #   Start:              docker compose up
+#   Migrate DB:         ./migrate-local.sh
 #   Stop:               docker compose down
 #   Destroy:            docker compose down --volumes --remove-orphans
 #   Reset everything:  ./reset.sh

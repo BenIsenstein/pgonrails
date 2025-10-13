@@ -2,9 +2,18 @@
 
 This is a Docker Compose setup for self-hosting Supabase. It has been tweaked to be compatible with hosting on Railway. It is being closely maintained and updated as the Supabase platform adds new features.
 
+PG On Rails is a passion project that combines two of my favourite things: Supabase and Railway! At first I called it "Supabase On Railway", but the name "PG On Rails" just felt like an obvious way to honor both Postgres and Railway.
+
+PG On Rails is **local-first.** It is my mission to make the developer experience with Supabase better than ever before, which means that we not only need to run the entire stack locally, but we need *to see behind the magic*, and even wield some of the magic for ourselves. By moving *every service into its own directory*, we open up the option to add configuration, custom app logic, and take advantage of the modern deployment pattern of **watch paths in monorepos.**
+
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/5ArOQi?referralCode=Hwex-j&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/5ArOQi?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
+## Required for local dev
+
+- <a href="https://docs.docker.com/desktop/" target="_blank" rel="noopener noreferrer">Docker Desktop</a>&nbsp;&nbsp;<img src="https://docs.docker.com/assets/images/favicon.svg" alt="description" width="20" height="20" />
+- <a href="https://supabase.com/docs/guides/local-development/cli/getting-started" target="_blank" rel="noopener noreferrer">Supabase CLI</a>&nbsp;&nbsp;<img src="https://avatars.githubusercontent.com/u/54469796?s=20" alt="description" width="20" height="20" />
 
 ## Get Started
 
@@ -15,6 +24,10 @@ Setup environment and volumes
 Run the app locally
 
 `docker compose up`
+
+Run DB migrations for the NextJS site
+
+`./migrate-local.sh`
 
 Visit the supabase studio at http://localhost:8000
 
@@ -45,6 +58,47 @@ For the hackers. Configure every aspect of your Supabase application and version
 - Networking settings
 - Railway config-as-code
 
+## Deploy on Railway
+
+1. Visit the [template page](https://railway.com/deploy/5ArOQi?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic) for PG On Rails and click "Deploy Now".
+
+2. Use the Supabase self-hosting tool to [generate a JWT secret and keys](https://supabase.com/docs/guides/self-hosting/docker#generate-api-keys) for your project. Add them to the input fields provided by the `Postgres` service.
+
+![Deploy](https://github.com/BenIsenstein/pgonrails-media/blob/main/Deploy_Template_and_Input_JWTs.gif)
+
+3. Wait for the project to deploy.
+
+![Wait For Deployment](https://github.com/BenIsenstein/pgonrails-media/blob/main/Wait_For_Deployment.gif)
+
+4. Eject from the template repo and Railway will create a fork for you on GitHub.
+
+![Eject](https://github.com/BenIsenstein/pgonrails-media/blob/main/Eject.gif)
+
+5. On each service, turn on `Wait For CI` and add `Watch Paths` to make CI/CD more targeted.
+
+- A service's watch path should be its own `Root Directory`, which can be found at the top of the `Settings` panel, followed by `/**/*`. For example, the `Site` service builds from the `/site` directory within this repo, therefore its watch path is `/site/**/*`.
+- You must manually do this on all 13 services in your project in order to configure Railway's CI/CD.
+
+![CI and Watch Paths](https://github.com/BenIsenstein/pgonrails-media/blob/main/CI_and_Watch_Paths.gif)
+
+6. Copy the `DB_PUBLIC_CONNECTION_STRING` from the `Postgres` service.
+
+7. Visit your new repo and add the `DB_URL` secret to GitHub Actions secrets.
+
+8. Manually run the DB migrations action.
+
+![GH Action Migrate DB](https://github.com/BenIsenstein/pgonrails-media/blob/main/Add_GH_Actions_Secret_and_Run_Migrations.gif)
+
+9. Clone your repo and begin building features locally. Push to GitHub and watch Railway CI/CD work wonders!
+
+![Begin Using Your App](https://github.com/BenIsenstein/pgonrails-media/blob/main/Begin_Using_Your_App.gif)
+
+![Use Your App](https://github.com/BenIsenstein/pgonrails-media/blob/main/Use_your_app.gif)
+
+![Use Supabase Studio](https://github.com/BenIsenstein/pgonrails-media/blob/main/Use_Supabase_Studio.gif)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/5ArOQi?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 ## Frontend included with seamless dev mode
 
 We included a frontend app in the stack and named it `site`. The frontend site is a NextJS app built with `create-next-app`, `tailwindCSS` and `shadcn/ui`. It includes basic auth functionality so you can begin building user experiences out of the box.
@@ -67,6 +121,10 @@ The local development experience, which runs on Docker Compose, points to a `dev
 
 The other strategy which enables smooth local development inside Docker, is mounting the entire `site` directory as a volume inside the dev container (`volumes: - ./site:/app`). This exposes the codebase from your local filesystem inside the container, where the dev server can pick up any changes and deliver that hot-reload experience we all love.
 
+## No mail server yet, no problem
+
+By default, mailing is disabled. Once a user signs up with their email and password, their email is "auto-confirmed" by the auth server and they are signed in.
+
 ## Setup mailing fast
 
 The auth server requires an SMTP server to send transactional emails. In my experience, the quickest way to get up and running in both **local** and **non-production cloud** environments, is through a gmail account with an app password.
@@ -84,3 +142,5 @@ Make sure the email signup and SMTP environment variables are set:
     GOTRUE_SMTP_PORT=587
     GOTRUE_SMTP_SENDER_NAME: "PG On Rails"
 ```
+
+**NOTE** - SMTP traffic on Railway is only allowed for the Pro Plan and above.
