@@ -25,10 +25,6 @@ Run the app locally
 
 `docker compose up`
 
-Run DB migrations for the NextJS site
-
-`./migrate-local.sh`
-
 Visit the supabase studio at http://localhost:8000
 
 Visit the frontend site in dev mode at http://localhost:5173
@@ -81,15 +77,7 @@ For the hackers. Configure every aspect of your Supabase application and version
 
 ![CI and Watch Paths](https://github.com/BenIsenstein/pgonrails-media/blob/main/CI_and_Watch_Paths.gif)
 
-6. Copy the `DB_PUBLIC_CONNECTION_STRING` from the `Postgres` service.
-
-7. Visit your new repo and add the `DB_URL` secret to GitHub Actions secrets.
-
-8. Manually run the DB migrations action.
-
-![GH Action Migrate DB](https://github.com/BenIsenstein/pgonrails-media/blob/main/Add_GH_Actions_Secret_and_Run_Migrations.gif)
-
-9. Clone your repo and begin building features locally. Push to GitHub and watch Railway CI/CD work wonders!
+6. Clone your repo and begin building features locally. Push to GitHub and watch Railway CI/CD work wonders!
 
 ![Begin Using Your App](https://github.com/BenIsenstein/pgonrails-media/blob/main/Begin_Using_Your_App.gif)
 
@@ -120,6 +108,22 @@ The project is setup so that running the Docker Compose stack locally **runs the
 The local development experience, which runs on Docker Compose, points to a `dev.Dockerfile` in the `site` repo. This dockerfile runs the NextJS dev server. For production, however, Railway looks for a `Dockerfile` by default (no `dev` prefix), and will deploy using the `Dockerfile` which builds and serves the optimized site.
 
 The other strategy which enables smooth local development inside Docker, is mounting the entire `site` directory as a volume inside the dev container (`volumes: - ./site:/app`). This exposes the codebase from your local filesystem inside the container, where the dev server can pick up any changes and deliver that hot-reload experience we all love.
+
+## Set up DB migration GitHub action
+
+By default, the `Site` service runs its DB migrations on startup:
+
+`ENTRYPOINT supabase db push ... && node server.js`
+
+This way, the example web app is usable from the moment you deploy. However it's understandable if you'd rather move this function into a GitHub action. The code for that GitHub action is already included! Check it out in the `.github/workflows`. All you have to do is add a `DB_URL` secret to the Actions secrets for the repo, and it'll automatically run whenever new migrations are added to the `/site/supabase/migrations` folder.
+
+1. Copy the `DB_PUBLIC_CONNECTION_STRING` from the `Postgres` service.
+
+2. Visit your new repo and add the `DB_URL` secret to GitHub Actions secrets.
+
+3. Manually run the DB migrations action.
+
+![GH Action Migrate DB](https://github.com/BenIsenstein/pgonrails-media/blob/main/Add_GH_Actions_Secret_and_Run_Migrations.gif)
 
 ## No mail server yet, no problem
 

@@ -60,6 +60,7 @@ COPY --from=build /app/.next/static ./.next/static
 # ensure you copy them here. The standalone trace usually includes runtime deps but not arbitrary files your app reads by path.
 # Example:
 # COPY --from=build /app/prisma ./prisma
+COPY ./supabase ./supabase
 
 # Drop privileges
 USER nextjs
