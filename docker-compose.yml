@@ -35,6 +35,8 @@ services:
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
 
+      DB_PRIVATE_CONNECTION_STRING: postgres://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+
   studio:
     build: ./studio
     restart: unless-stopped
