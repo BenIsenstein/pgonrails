@@ -24,6 +24,11 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
     environment:
       HOSTNAME: ${SITE_LISTEN}
       PORT: ${SITE_PORT}
@@ -134,7 +139,7 @@ services:
       GOTRUE_JWT_EXP: ${JWT_EXPIRY}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
 
-      # To change their password, users must provide a OTP from their email or phone
+      # When set to "true", to change their password, users must provide a OTP from their email or phone
       GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: false
 
       # Set to "true" to disable emails, which can be useful in development. Set to "false" to require email confirmations.
