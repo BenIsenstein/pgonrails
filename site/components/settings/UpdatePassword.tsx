@@ -21,7 +21,11 @@ const DEFAULT_STATE = {
     nonce: ""
 }
 
-export default function UpdatePassword() {
+const REQUIRE_REAUTHENTICATION = process.env.NEXT_PUBLIC_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION === "true"
+
+export default REQUIRE_REAUTHENTICATION ? UpdatePasswordWithOtp : UpdatePasswordSimple
+
+function UpdatePasswordWithOtp() {
     const { supabase, user } = useAppContext()
     const [state, mergeState] = useMergeState(DEFAULT_STATE)
 
@@ -134,6 +138,67 @@ export default function UpdatePassword() {
                     {state.passwordLoading ? <Loader2 className="animate-spin" /> : "Change password"}
                 </Button>
             </div>
+        </div>
+    )
+}
+
+function UpdatePasswordSimple() {
+    const { supabase, user } = useAppContext()
+    const [state, mergeState] = useMergeState(DEFAULT_STATE)
+
+    async function updatePassword() {
+        mergeState({ passwordLoading: true })
+
+        const { error } = await supabase.auth.updateUser({
+            password: state.newPassword,
+        })
+
+        mergeState(DEFAULT_STATE)
+
+        if (error) {
+            toast("Error", {
+                description: error.message
+            })
+
+            return
+        }
+
+        toast("Success!", {
+            description: "Your password has been successfully updated."
+        })
+    }
+
+    const canSubmit = user && state.newPassword.length >= 8 && state.newPassword === state.confirmPassword
+
+    return (
+        <div className="space-y-6">
+            <div className="space-y-2">
+                <Label>New password</Label>
+                <Input
+                    type="password"
+                    placeholder="Input your new password..."
+                    value={state.newPassword}
+                    onChange={e => mergeState({ newPassword: e.target.value })}
+                />
+            </div>
+            <div className="space-y-2">
+                <Label>Confirm new password</Label>
+                <Input
+                    type="password"
+                    placeholder="Confirm your new password..."
+                    value={state.confirmPassword}
+                    onChange={e => mergeState({ confirmPassword: e.target.value })}
+                />
+            </div>
+            <Button
+                variant={canSubmit ? "default" : "outline"}
+                className="w-38"
+                aria-disabled={!canSubmit || state.passwordLoading}
+                disabled={!canSubmit || state.passwordLoading}
+                onClick={updatePassword}
+            >
+                {state.passwordLoading ? <Loader2 className="animate-spin" /> : "Change password"}
+            </Button>
         </div>
     )
 }

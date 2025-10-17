@@ -36,6 +36,7 @@ services:
       NEXT_PUBLIC_SITE_URL: http://localhost:${SITE_PORT}
       NEXT_PUBLIC_SUPABASE_URL: http://localhost:${KONG_PORT}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
+      NEXT_PUBLIC_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: ${GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION}
       
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
@@ -140,7 +141,7 @@ services:
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
 
       # When set to "true", to change their password, users must provide a OTP from their email or phone
-      GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: false
+      GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: ${GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION}
 
       # Set to "true" to disable emails, which can be useful in development. Set to "false" to require email confirmations.
       GOTRUE_MAILER_AUTOCONFIRM: true
@@ -152,7 +153,7 @@ services:
       GOTRUE_SMTP_PASS: ${SMTP_PASS}
       GOTRUE_SMTP_SENDER_NAME: "PG On Rails"
 
-      GOTRUE_MAILER_EXTERNAL_HOSTS: kong,site,localhost
+      GOTRUE_MAILER_EXTERNAL_HOSTS: ${KONG_HOST},${SITE_HOST},localhost
 
       GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
