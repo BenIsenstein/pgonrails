@@ -252,7 +252,7 @@ services:
         condition: service_healthy
       rest:
         condition: service_started
-      minio:
+      localstack-s3:
         condition: service_started
     environment:
       # Server
@@ -323,7 +323,7 @@ services:
     build: ./imgproxy
     restart: unless-stopped
     depends_on:
-      minio:
+      localstack-s3:
         condition: service_started
     healthcheck:
       test: [ "CMD", "imgproxy", "health" ]
@@ -342,24 +342,26 @@ services:
       IMGPROXY_AUTO_WEBP: true
       IMGPROXY_JPEG_PROGRESSIVE: true
       IMGPROXY_IGNORE_SSL_VERIFICATION: true
-      
-  minio:
-    build: ./minio
+  
+  localstack-s3:
+    build: ./localstack-s3
     restart: unless-stopped
     ports:
       - ${S3_PORT}:${S3_PORT}
-      - ${S3_CONSOLE_PORT}:${S3_CONSOLE_PORT}
     volumes:
-      - ./volumes/storage:/data:z
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://minio:9000/minio/health/live" ]
-      interval: 2s
-      timeout: 10s
-      retries: 5
+      - ./volumes/localstack:/var/lib/localstack
     environment:
-      MINIO_ROOT_USER: ${S3_ID}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET}
+      GATEWAY_LISTEN: ${S3_LISTEN}:${S3_PORT}
+      LOCALSTACK_HOST: localhost.localstack.cloud:${S3_PORT}
+      PERSISTENCE: 1
+      STATE_SAVE_STRATEGY: ON_SHUTDOWN
+      STATE_LOAD_STRATEGY: ON_STARTUP
+      DEBUG: 1
       STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${S3_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://localhost.localstack.cloud:${S3_PORT}
     
   meta:
     build: ./meta
