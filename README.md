@@ -1,10 +1,8 @@
 # PG On Rails
 
-This is a Docker Compose setup for self-hosting Supabase. It has been tweaked to be compatible with hosting on Railway. It is being closely maintained and updated as the Supabase platform adds new features.
+This is a Docker Compose setup for self-hosting Supabase. It is compatible with hosting on Railway. It is being closely maintained to support the full self-hosted feature set.
 
-PG On Rails is a passion project that combines two of my favourite things: Supabase and Railway! At first I called it "Supabase On Railway", but the name "PG On Rails" just felt like an obvious way to honor both Postgres and Railway.
-
-PG On Rails is **local-first.** It is my mission to make the developer experience with Supabase better than ever before, which means that we not only need to run the entire stack locally, but we need *to see behind the magic*, and even wield some of the magic for ourselves. By moving *every service into its own directory*, we open up the option to add configuration, custom app logic, and take advantage of the modern deployment pattern of **watch paths in monorepos.**
+PG On Rails is **local-first** and provides an amazing developer experience. Run the entire stack locally in a way that is *transparent, configurable, and **versionable in code***. By tracking **every service in its own directory**, we can *co-locate config, app logic and build information (Dockerfile) for each service,* and utilize the modern deployment pattern of **watch paths in monorepos.**
 
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
