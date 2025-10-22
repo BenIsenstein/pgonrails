@@ -1,1 +1,1 @@
-FROM supabase/postgres-meta:v0.91.6
+FROM supabase/postgres-meta:v0.93.0
