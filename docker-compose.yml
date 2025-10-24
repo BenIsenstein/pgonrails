@@ -87,7 +87,7 @@ services:
       retries: 3
     environment:
       KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_PORT} reuseport backlog=16384
-      KONG_STATUS_LISTEN: "[::]:${KONG_STATUS_PORT}, 0.0.0.0:${KONG_STATUS_PORT}"
+      KONG_STATUS_LISTEN: ${KONG_LISTEN}:${KONG_STATUS_PORT}, 0.0.0.0:${KONG_STATUS_PORT}
       # To find the IP address of services, Kong looks for SRV records by default, which don't exist in the Docker Compose internal network DNS
       KONG_DNS_ORDER: LAST,A,CNAME
 
