@@ -10,6 +10,8 @@ on:
 
 jobs:
   deploy:
+    if: ${{ secrets.ACTIONS_MIGRATE_ENABLED == 'true' }}
+
     runs-on: ubuntu-latest
 
     steps:
