@@ -12,10 +12,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      MIGRATE_ENABLED: ${{ secrets.ACTIONS_MIGRATE_ENABLED }}
-
-    if: ${{ github.event_name == 'workflow_dispatch' || (env.MIGRATE_ENABLED == 'true') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (vars.MIGRATE_ENABLED == 'true') }}
 
     steps:
       - uses: actions/checkout@v4
