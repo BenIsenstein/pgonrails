@@ -6,7 +6,7 @@ PG On Rails is **local-first** and provides an amazing developer experience. Run
 
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/5ArOQi?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/complete-supabase-nextjs-frontend?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Required for local dev
 
@@ -83,7 +83,7 @@ For the hackers. Configure every aspect of your Supabase application and version
 
 ![Use Supabase Studio](https://github.com/BenIsenstein/pgonrails-media/blob/main/Use_Supabase_Studio.gif)
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/5ArOQi?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/complete-supabase-nextjs-frontend?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Frontend included with seamless dev mode
 
