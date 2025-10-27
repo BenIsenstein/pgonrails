@@ -6,6 +6,16 @@ PG On Rails is **local-first** and provides an amazing developer experience. Run
 
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
 
+You can now **deploy to Railway with a single command:**
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/BenIsenstein/pgonrails-cli/main/start.sh)
+```
+
+To learn more, visit the [PG On Rails CLI repo.](https://github.com/BenIsenstein/pgonrails-cli)
+
+Prefer to use Railway's web UI?
+
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/complete-supabase-nextjs-frontend?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Required for local dev
