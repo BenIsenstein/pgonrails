@@ -51,6 +51,9 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       HOSTNAME: ${STUDIO_LISTEN}
       PORT: ${STUDIO_PORT}
@@ -73,7 +76,14 @@ services:
 
       DEFAULT_ORGANIZATION_NAME: My Org
       DEFAULT_PROJECT_NAME: PG On Rails
-      
+
+      # LOGFLARE_API_KEY is deprecated
+      LOGFLARE_API_KEY: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
+      LOGFLARE_URL: http://${ANALYTICS_HOST}:${ANALYTICS_PORT}
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
 
   kong:
     build: ./kong
@@ -85,6 +95,9 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_PORT} reuseport backlog=16384
       KONG_STATUS_LISTEN: ${KONG_LISTEN}:${KONG_STATUS_PORT}, 0.0.0.0:${KONG_STATUS_PORT}
@@ -117,6 +130,8 @@ services:
       REALTIME_PORT: ${REALTIME_PORT}
       STORAGE_HOST: ${STORAGE_HOST}
       STORAGE_PORT: ${STORAGE_PORT}
+      ANALYTICS_HOST: ${ANALYTICS_HOST}
+      ANALYTICS_PORT: ${ANALYTICS_PORT}
 
   auth:
     build: ./auth
@@ -125,6 +140,8 @@ services:
       - ./auth/templates:/home/mailer/templates
     depends_on:
       db:
+        condition: service_healthy
+      analytics:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${AUTH_PORT}/health" ]
@@ -191,6 +208,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      analytics:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${REST_ADMIN_PORT}/live"]
       timeout: 5s
@@ -219,6 +238,8 @@ services:
     restart: unless-stopped
     depends_on:
       db:
+        condition: service_healthy
+      analytics:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:${REALTIME_PORT}/api/tenants/${DEFAULT_TENANT}/health" ]
@@ -258,6 +279,8 @@ services:
       db:
         condition: service_healthy
       rest:
+        condition: service_started
+      imgproxy:
         condition: service_started
       minio:
         condition: service_started
@@ -374,6 +397,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      analytics:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:${META_PORT}/health').then((r) => {if (r.status !== 200) throw new Error(r.status)})"]
       interval: 5s
@@ -427,6 +452,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    depends_on:
+      vector:
+        condition: service_healthy
     environment:
       LISTEN_ADDRESSES: ${DB_LISTEN}
       PGPORT: ${DB_PORT}
@@ -448,6 +476,59 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
+  
+  vector:
+    build: ./vector
+    restart: unless-stopped
+    volumes:
+      - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro,z
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://${VECTOR_HOST}:${VECTOR_PORT}/health" ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      VECTOR_LISTEN: ${VECTOR_LISTEN}
+      VECTOR_PORT: ${VECTOR_PORT}
+      ANALYTICS_HOST: ${ANALYTICS_HOST}
+      ANALYTICS_PORT: ${ANALYTICS_PORT}
+      KONG_HOST: ${KONG_HOST}
+      KONG_PORT: ${KONG_PORT}
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+    security_opt:
+      - "label=disable"
+
+  analytics:
+    build: ./analytics
+    restart: unless-stopped
+    ports:
+      - ${ANALYTICS_PORT}:${ANALYTICS_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:${ANALYTICS_PORT}/health" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    environment:
+      LOGFLARE_NODE_HOST: ${ANALYTICS_LISTEN}
+      DB_USERNAME: supabase_admin
+      DB_DATABASE: _supabase
+      DB_HOSTNAME: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_PASSWORD: ${DB_SUPERUSER_PASSWORD}
+      DB_SCHEMA: _analytics
+
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
+      LOGFLARE_SINGLE_TENANT: true
+      LOGFLARE_SUPABASE_MODE: true
+      LOGFLARE_MIN_CLUSTER_SIZE: 1
+
+      POSTGRES_BACKEND_URL: postgresql://supabase_admin:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/_supabase
+      POSTGRES_BACKEND_SCHEMA: _analytics
+      LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
 
   pgbouncer:
     build: ./pgbouncer
