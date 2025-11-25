@@ -1,4 +1,4 @@
-FROM supabase/gotrue:v2.182.1
+FROM supabase/gotrue:v2.183.0
 
 # Copy email templates into the container
 COPY ./templates /home/mailer/templates
