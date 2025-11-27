@@ -1,1 +1,1 @@
-FROM supabase/studio:2025.11.25-sha-8de52c4
+FROM supabase/studio:2025.11.26-sha-8f096b5
