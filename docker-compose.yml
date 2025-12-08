@@ -242,7 +242,7 @@ services:
       analytics:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:${REALTIME_PORT}/api/tenants/${DEFAULT_TENANT}/health" ]
+      test: [ "CMD-SHELL", "curl -sSfL --head -o /dev/null -H \"Authorization: Bearer ${ANON_KEY}\" http://localhost:${REALTIME_PORT}/api/tenants/${DEFAULT_TENANT}/health" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -264,8 +264,8 @@ services:
       RLIMIT_NOFILE: 10000
       APP_NAME: realtime
       SELF_HOST_TENANT_NAME: ${DEFAULT_TENANT}
-      SEED_SELF_HOST: true
-      RUN_JANITOR: true
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
 
   storage:
     build: ./storage
