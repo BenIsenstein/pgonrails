@@ -1,1 +1,1 @@
-FROM postgrest/postgrest:v13.0.7
+FROM postgrest/postgrest:v14.1
