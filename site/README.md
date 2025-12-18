@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Security note
+
+If your deployment platform flags `CVE-2025-55184` / `GHSA-mwv6-3258-q52c`, bump `next` to a patched version (for this template, use `next >= 15.5.9`) and re-run `npm install` to update `package-lock.json`.
+
 ## Getting Started
 
 First, run the development server:

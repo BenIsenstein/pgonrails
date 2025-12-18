@@ -99,6 +99,13 @@ For the hackers. Configure every aspect of your Supabase application and version
 
 We included a frontend app in the stack and named it `site`. The frontend site is a NextJS app built with `create-next-app`, `tailwindCSS` and `shadcn/ui`. It includes basic auth functionality so you can begin building user experiences out of the box.
 
+### Security note (Next.js)
+
+Some deployment platforms (including Railway) run dependency vulnerability scans as part of the build. If you see a failure referencing `CVE-2025-55184` / `GHSA-mwv6-3258-q52c`, the fix is to ensure the `site` app uses a patched `next` version:
+
+- `site/package.json` should be `next >= 15.5.9`
+- Then re-generate the lockfile from the `site` directory: `npm install`
+
 ### Separate Dockerfiles for development and deployment
 
 The project is setup so that running the Docker Compose stack locally **runs the site in dev mode**. See how this is possible in `docker-compose.yml`:
