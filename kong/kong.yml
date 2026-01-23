@@ -7,8 +7,8 @@ _transform: true
 consumers:
   - username: DASHBOARD
     basicauth_credentials:
-      - username: $DASHBOARD_USERNAME
-        password: $DASHBOARD_PASSWORD
+      - username: '$DASHBOARD_USERNAME'
+        password: '$DASHBOARD_PASSWORD'
   - username: anon
     keyauth_credentials:
       - key: $SUPABASE_ANON_KEY
