@@ -1,4 +1,4 @@
-FROM supabase/logflare:1.27.0
+FROM supabase/logflare:1.30.3
 
 # Uncomment to use Big Query backend for analytics
 # COPY ./gcloud.json /opt/app/rel/logflare/bin/gcloud.json
