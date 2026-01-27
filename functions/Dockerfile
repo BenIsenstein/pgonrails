@@ -1,4 +1,4 @@
-FROM supabase/edge-runtime:v1.69.28
+FROM supabase/edge-runtime:v1.70.0
 
 RUN apt-get update && apt-get install -y curl
 
