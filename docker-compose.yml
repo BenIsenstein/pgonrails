@@ -266,6 +266,7 @@ services:
       SELF_HOST_TENANT_NAME: ${DEFAULT_TENANT}
       SEED_SELF_HOST: "true"
       RUN_JANITOR: "true"
+      DISABLE_HEALTHCHECK_LOGGING: "true"
 
   storage:
     build: ./storage
