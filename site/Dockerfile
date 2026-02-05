@@ -37,7 +37,7 @@ RUN npm run build
 
 FROM base AS runner
 
-ENV SUPABASE_CLI_VERSION="v2.51.0"
+ENV SUPABASE_CLI_VERSION="v2.75.0"
 
 # Install supabase CLI for migrations on startup
 RUN apt-get update && apt-get install -y curl unzip \
