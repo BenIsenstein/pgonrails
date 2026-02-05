@@ -64,6 +64,7 @@ export default function UploadAvatar() {
                 ref={setInputRef}
                 className="hidden"
                 type="file"
+                accept="image/*"
                 onChange={handleUploadAvatar}
             />
             <DropdownMenu>
