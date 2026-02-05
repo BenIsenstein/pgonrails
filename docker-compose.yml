@@ -77,6 +77,9 @@ services:
       DEFAULT_ORGANIZATION_NAME: My Org
       DEFAULT_PROJECT_NAME: PG On Rails
 
+      SNIPPETS_MANAGEMENT_FOLDER: /app/snippets
+      EDGE_FUNCTIONS_MANAGEMENT_FOLDER: /app/edge-functions
+
       # LOGFLARE_API_KEY is deprecated
       LOGFLARE_API_KEY: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
       LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
@@ -84,6 +87,9 @@ services:
       LOGFLARE_URL: http://${ANALYTICS_HOST}:${ANALYTICS_PORT}
       NEXT_PUBLIC_ENABLE_LOGS: true
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
+    volumes:
+      - ./studio/snippets:/app/snippets:Z
+      - ./functions/functions:/app/edge-functions:Z
 
   kong:
     build: ./kong
