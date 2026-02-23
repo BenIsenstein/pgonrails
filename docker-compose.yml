@@ -508,8 +508,8 @@ services:
   analytics:
     build: ./analytics
     restart: unless-stopped
-    ports:
-      - ${ANALYTICS_PORT}:${ANALYTICS_PORT}
+    # ports:
+    #   - ${ANALYTICS_PORT}:${ANALYTICS_PORT}
     depends_on:
       db:
         condition: service_healthy
