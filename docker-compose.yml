@@ -428,6 +428,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./functions/functions:/home/deno/functions
+      - deno-cache:/root/.cache/deno
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${FUNCTIONS_PORT}/health"]
       interval: 5s
@@ -558,3 +559,7 @@ services:
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 100
       DEFAULT_POOL_SIZE: 20
+
+volumes:
+  # db-config:
+  deno-cache:
