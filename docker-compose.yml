@@ -310,7 +310,7 @@ services:
 
       # Migrations
       DB_INSTALL_ROLES: false # set to false if you want to manage roles yourself
-      DB_ALLOW_MIGRATION_REFRESH: false
+      DB_ALLOW_MIGRATION_REFRESH: true
       DB_ANON_ROLE: anon
       DB_SERVICE_ROLE: service_role
       DB_AUTHENTICATED_ROLE: authenticated
@@ -349,8 +349,8 @@ services:
       IMGPROXY_HTTP_MAX_SOCKETS: 500
 
       # S3 Protocol
-      S3_PROTOCOL_ACCESS_KEY_ID: 625729a08b95bf1b7ff351a663f3a23c #???
-      S3_PROTOCOL_ACCESS_KEY_SECRET: 850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907 #???
+      S3_PROTOCOL_ACCESS_KEY_ID: ${S3_PROTOCOL_ACCESS_KEY_ID}
+      S3_PROTOCOL_ACCESS_KEY_SECRET: ${S3_PROTOCOL_ACCESS_KEY_SECRET}
 
       # PostgREST
       POSTGREST_URL: http://${REST_HOST}:${REST_PORT}
