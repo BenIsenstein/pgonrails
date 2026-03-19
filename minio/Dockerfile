@@ -1,4 +1,7 @@
-FROM minio/minio:RELEASE.2025-09-07T16-13-09Z
+# RELEASE.2025-04-22 = last version with full console UI
+# (policies, users, access keys manageable in browser)
+# RELEASE.2025-05-24+ deprecated console → AiStor Enterprise
+FROM minio/minio:RELEASE.2025-04-22T22-12-26Z
 
 RUN mkdir -p /data
 
