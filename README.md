@@ -33,6 +33,10 @@ Run the app locally
 
 `docker compose up`
 
+Run with Caddy TLS Proxy
+
+`docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d`
+
 Visit the supabase studio at http://localhost:8000
 
 Visit the frontend site in dev mode at http://localhost:5173
