@@ -1,6 +1,6 @@
 FROM kong/kong:3.9.1
 COPY ./kong.yml /home/kong/temp.yml
-USER 0
-RUN apt-get update && apt-get install -y gettext && rm -rf /var/lib/apt/lists/*
-USER kong
-ENTRYPOINT envsubst < /home/kong/temp.yml > /home/kong/kong.yml && /docker-entrypoint.sh kong docker-start
+COPY ./kong-entrypoint.sh /home/kong/kong-entrypoint.sh
+# COPY ./server.crt /home/kong/server.crt
+# COPY ./server.key /home/kong/server.key
+ENTRYPOINT /home/kong/kong-entrypoint.sh
