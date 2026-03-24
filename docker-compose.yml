@@ -54,6 +54,8 @@ services:
     depends_on:
       analytics:
         condition: service_healthy
+      kong:
+        condition: service_healthy
     environment:
       HOSTNAME: ${STUDIO_LISTEN}
       PORT: ${STUDIO_PORT}
@@ -98,16 +100,18 @@ services:
   kong:
     build: ./kong
     restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - api-gw
     ports:
       - ${KONG_PORT}:${KONG_PORT}/tcp
+      - ${KONG_HTTPS_PORT}:${KONG_HTTPS_PORT}/tcp
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${KONG_STATUS_PORT}/status" ]
-      timeout: 10s
+      test: [ "CMD", "kong", "health" ]
+      timeout: 5s
       interval: 5s
-      retries: 3
-    depends_on:
-      analytics:
-        condition: service_healthy
+      retries: 5
     environment:
       KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_PORT} reuseport backlog=16384
       KONG_STATUS_LISTEN: ${KONG_LISTEN}:${KONG_STATUS_PORT}, 0.0.0.0:${KONG_STATUS_PORT}
@@ -115,17 +119,28 @@ services:
       KONG_DNS_ORDER: LAST,A,CNAME
 
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction,post-function
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       KONG_NGINX_WORKER_PROCESSES: 2
 
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      # KONG_SSL_CERT: /home/kong/server.crt
+      # KONG_SSL_CERT_KEY: /home/kong/server.key
+
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
 
+      # Legacy API keys (HS256-signed JWTs)
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+
+      # New opaque API keys
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:-}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:-}
+      ANON_KEY_ASYMMETRIC: ${ANON_KEY_ASYMMETRIC:-}
+      SERVICE_ROLE_KEY_ASYMMETRIC: ${SERVICE_ROLE_KEY_ASYMMETRIC:-}
+      
       AUTH_HOST: ${AUTH_HOST}
       AUTH_PORT: ${AUTH_PORT}
       REST_HOST: ${REST_HOST}
@@ -151,8 +166,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      analytics:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${AUTH_PORT}/health" ]
       timeout: 5s
@@ -172,7 +185,12 @@ services:
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_EXP: ${JWT_EXPIRY}
+
+      # Legacy symmetric HS256 key
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
+
+      # JSON array of signing JWKs (EC private + legacy symmetric)
+      # GOTRUE_JWT_KEYS: ${JWT_KEYS:-[]}
 
       # When set to "true", to change their password, users must provide a OTP from their email or phone
       GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: ${GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION}
@@ -236,7 +254,8 @@ services:
       PGRST_DB_MAX_ROWS: ${REST_DB_MAX_ROWS:-1000}
       PGRST_DB_EXTRA_SEARCH_PATH: ${REST_DB_EXTRA_SEARCH_PATH:-public}
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET}
+      # PostgREST accepts a plain-text symmetric secret, a single JWK, or a JWKS
+      PGRST_JWT_SECRET: ${JWT_JWKS:-${JWT_SECRET}}
       PGRST_DB_USE_LEGACY_GUCS: false
       PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
       PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
@@ -250,8 +269,6 @@ services:
     restart: unless-stopped
     depends_on:
       db:
-        condition: service_healthy
-      analytics:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -sSfL --head -o /dev/null -H \"Authorization: Bearer ${ANON_KEY}\" http://localhost:${REALTIME_PORT}/api/tenants/${DEFAULT_TENANT}/health" ]
@@ -271,7 +288,13 @@ services:
 
       DB_ENC_KEY: ${REALTIME_DB_ENC_KEY}
       SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE}
+
+      # Legacy symmetric HS256 key
       API_JWT_SECRET: ${JWT_SECRET}
+
+      # JWKS for token verification (EC public + legacy symmetric)
+      # API_JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
+
       DNS_NODES: "''"
       RLIMIT_NOFILE: 10000
       APP_NAME: realtime
@@ -306,8 +329,13 @@ services:
       # Auth
       ANON_KEY: ${ANON_KEY}
       SERVICE_KEY: ${SERVICE_ROLE_KEY}
+
+      # Legacy symmetric HS256 key
       AUTH_JWT_SECRET: ${JWT_SECRET}
       AUTH_JWT_ALGORITHM: HS256
+
+      # JWKS for token verification (EC public + legacy symmetric)
+      # JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
 
       # Database
       DATABASE_URL: postgres://supabase_storage_admin:${DB_STORAGE_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -360,7 +388,6 @@ services:
 
       # PostgREST
       POSTGREST_URL: http://${REST_HOST}:${REST_PORT}
-      PGRST_JWT_SECRET: ${JWT_SECRET}
       
   imgproxy:
     build: ./imgproxy
@@ -410,8 +437,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      analytics:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:${META_PORT}/health').then((r) => {if (r.status !== 200) throw new Error(r.status)})"]
       interval: 5s
@@ -432,6 +457,9 @@ services:
   functions:
     build: ./functions
     restart: unless-stopped
+    depends_on:
+      kong:
+        condition: service_healthy
     volumes:
       - ./functions/functions:/home/deno/functions
       - deno-cache:/root/.cache/deno
@@ -446,12 +474,17 @@ services:
 
       SUPABASE_DB_URL: postgresql://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
-      
+
+      # Legacy symmetric HS256 key
+      JWT_SECRET: ${JWT_SECRET}
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
 
-      JWT_SECRET: ${JWT_SECRET}
-      # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
+      # New opaque API keys
+      SUPABASE_PUBLISHABLE_KEYS: "{\"default\":\"${SUPABASE_PUBLISHABLE_KEY:-}\"}"
+      SUPABASE_SECRET_KEYS: "{\"default\":\"${SUPABASE_SECRET_KEY:-}\"}"
+
+      # TODO: Allow configuring VERIFY_JWT per function.
       VERIFY_JWT: false
 
   db:
@@ -466,9 +499,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    depends_on:
-      vector:
-        condition: service_healthy
     environment:
       LISTEN_ADDRESSES: ${DB_LISTEN}
       PGPORT: ${DB_PORT}

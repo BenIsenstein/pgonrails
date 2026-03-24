@@ -12,9 +12,11 @@ consumers:
   - username: anon
     keyauth_credentials:
       - key: $SUPABASE_ANON_KEY
+      - key: $SUPABASE_PUBLISHABLE_KEY
   - username: service_role
     keyauth_credentials:
       - key: $SUPABASE_SERVICE_KEY
+      - key: $SUPABASE_SECRET_KEY
 
 ###
 ### Access Control List
@@ -31,6 +33,7 @@ acls:
 services:
   ## Open Auth routes
   - name: auth-v1-open
+    _comment: 'Auth: /auth/v1/verify* -> http://auth:9999/verify*'
     url: http://$AUTH_HOST:$AUTH_PORT/verify
     routes:
       - name: auth-v1-open
@@ -40,6 +43,7 @@ services:
     plugins:
       - name: cors
   - name: auth-v1-open-callback
+    _comment: 'Auth: /auth/v1/callback* -> http://auth:9999/callback*'
     url: http://$AUTH_HOST:$AUTH_PORT/callback
     routes:
       - name: auth-v1-open-callback
@@ -49,6 +53,7 @@ services:
     plugins:
       - name: cors
   - name: auth-v1-open-authorize
+    _comment: 'Auth: /auth/v1/authorize* -> http://auth:9999/authorize*'
     url: http://$AUTH_HOST:$AUTH_PORT/authorize
     routes:
       - name: auth-v1-open-authorize
@@ -57,10 +62,20 @@ services:
           - /auth/v1/authorize
     plugins:
       - name: cors
+  - name: auth-v1-open-jwks
+    _comment: 'Auth: /auth/v1/.well-known/jwks.json -> http://auth:9999/.well-known/jwks.json'
+    url: http://$AUTH_HOST:$AUTH_PORT/.well-known/jwks.json
+    routes:
+      - name: auth-v1-open-jwks
+        strip_path: true
+        paths:
+          - /auth/v1/.well-known/jwks.json
+    plugins:
+      - name: cors
 
   ## Secure Auth routes
   - name: auth-v1
-    _comment: 'GoTrue: /auth/v1/* -> http://auth:9999/*'
+    _comment: 'Auth: /auth/v1/* -> http://auth:9999/*'
     url: http://$AUTH_HOST:$AUTH_PORT/
     routes:
       - name: auth-v1-all
@@ -72,6 +87,14 @@ services:
       - name: key-auth
         config:
           hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
       - name: acl
         config:
           hide_groups_header: true
@@ -79,7 +102,7 @@ services:
             - admin
             - anon
 
-  # Secure REST routes
+  # Secure PostgREST routes
   - name: rest-v1
     _comment: 'PostgREST: /rest/v1/* -> http://rest:3000/*'
     url: http://$REST_HOST:$REST_PORT/
@@ -92,7 +115,15 @@ services:
       - name: cors
       - name: key-auth
         config:
-          hide_credentials: true
+          hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
       - name: acl
         config:
           hide_groups_header: true
@@ -113,12 +144,16 @@ services:
       - name: cors
       - name: key-auth
         config:
-          hide_credentials: true
+          hide_credentials: false
       - name: request-transformer
         config:
           add:
             headers:
-              - Content-Profile:graphql_public
+              - "Content-Profile: graphql_public"
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
       - name: acl
         config:
           hide_groups_header: true
@@ -141,14 +176,23 @@ services:
       - name: key-auth
         config:
           hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "x-api-key:$LUA_RT_WS_EXPR"
+          replace:
+            querystring:
+              - "apikey:$LUA_RT_WS_EXPR"
       - name: acl
         config:
           hide_groups_header: true
           allow:
             - admin
             - anon
+
   - name: realtime-v1-rest
-    _comment: 'Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*'
+    _comment: 'Realtime: /realtime/v1/api/* -> http://realtime:4000/api/*'
     url: http://$REALTIME_HOST:$REALTIME_PORT/api
     protocol: http
     routes:
@@ -161,6 +205,14 @@ services:
       - name: key-auth
         config:
           hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
       - name: acl
         config:
           hide_groups_header: true
@@ -168,7 +220,15 @@ services:
             - admin
             - anon
   
-  ## Storage routes - the storage server manages its own auth
+  ## Storage API endpoint (with Authorization header transformation).
+  ## No key-auth — S3 protocol requests don't carry an apikey header.
+  ##
+  ## The request-transformer translates opaque API keys to asymmetric JWTs
+  ## and passes through existing Authorization headers (user JWTs, AWS SigV4).
+  ## When no Authorization or apikey header is present (S3 presigned URLs),
+  ## the Lua expression evaluates to nil which Kong renders as empty string.
+  ## The post-function strips this empty header so Storage's S3 signature
+  ## verification falls through to query-parameter parsing.
   - name: storage-v1
     _comment: 'Storage: /storage/v1/* -> http://storage:5000/*'
     url: http://$STORAGE_HOST:$STORAGE_PORT/
@@ -179,16 +239,45 @@ services:
           - /storage/v1/
     plugins:
       - name: cors
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+      - name: post-function
+        config:
+          access:
+            - |
+              local auth = kong.request.get_header("authorization")
+              if auth == nil or auth == "" or auth:find("^%s*$") then
+                kong.service.request.clear_header("authorization")
+              end
 
   ## Edge Functions routes
   - name: functions-v1
     _comment: 'Edge Functions: /functions/v1/* -> http://functions:9000/*'
     url: http://$FUNCTIONS_HOST:$FUNCTIONS_PORT/
+    read_timeout: 150000
     routes:
       - name: functions-v1-all
         strip_path: true
         paths:
           - /functions/v1/
+    plugins:
+      - name: cors
+
+  ## OAuth 2.0 Authorization Server Metadata (RFC 8414)
+  - name: well-known-oauth
+    _comment: 'Auth: /.well-known/oauth-authorization-server -> http://auth:9999/.well-known/oauth-authorization-server'
+    url: http://$AUTH_HOST:$AUTH_PORT/.well-known/oauth-authorization-server
+    routes:
+      - name: well-known-oauth
+        strip_path: true
+        paths:
+          - /.well-known/oauth-authorization-server
     plugins:
       - name: cors
 
