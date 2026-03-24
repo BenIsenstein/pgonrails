@@ -54,8 +54,6 @@ services:
     depends_on:
       analytics:
         condition: service_healthy
-      kong:
-        condition: service_healthy
     environment:
       HOSTNAME: ${STUDIO_LISTEN}
       PORT: ${STUDIO_PORT}
@@ -112,17 +110,22 @@ services:
       timeout: 5s
       interval: 5s
       retries: 5
+    depends_on:
+      studio:
+        condition: service_healthy
     environment:
       KONG_PROXY_LISTEN: ${KONG_LISTEN}:${KONG_PORT} reuseport backlog=16384, 0.0.0.0:${KONG_PORT} reuseport backlog=16384
       KONG_STATUS_LISTEN: ${KONG_LISTEN}:${KONG_STATUS_PORT}, 0.0.0.0:${KONG_STATUS_PORT}
       # To find the IP address of services, Kong looks for SRV records by default, which don't exist in the Docker Compose internal network DNS
       KONG_DNS_ORDER: LAST,A,CNAME
-
+      KONG_DNS_NOT_FOUND_TTL: 1
+      
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction,post-function
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
       KONG_NGINX_WORKER_PROCESSES: 2
 
       # KONG_SSL_CERT: /home/kong/server.crt
