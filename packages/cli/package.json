@@ -1,0 +1,41 @@
+{
+  "name": "create-pgonrails",
+  "version": "1.0.0",
+  "description": "Deploy a complete self-hosted Supabase instance on Railway in minutes",
+  "type": "module",
+  "bin": {
+    "create-pgonrails": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "bun run ./src/cli.ts",
+    "build": "bun build ./src/cli.ts --outdir ./dist --target node",
+    "test": "bun test",
+    "prepublishOnly": "bun run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "supabase",
+    "railway",
+    "postgres",
+    "self-hosted",
+    "deploy",
+    "cli"
+  ],
+  "author": "Ben Isenstein",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BenIsenstein/pgonrails-cli"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@inquirer/prompts": "^7.5.0",
+    "@types/node": "^22.13.10",
+    "jose": "^6.0.10",
+    "typescript": "^5.8.2"
+  }
+}
