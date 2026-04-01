@@ -9,10 +9,8 @@ My longterm vision is to make PG On Rails *the best strategy for bootstrapping, 
 You can now **deploy to Railway with a single command:**
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/BenIsenstein/pgonrails-cli/main/start.sh)
+npx create-pgonrails
 ```
-
-To learn more, visit the [PG On Rails CLI repo.](https://github.com/BenIsenstein/pgonrails-cli)
 
 Prefer to use Railway's web UI?
 
