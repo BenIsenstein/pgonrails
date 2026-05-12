@@ -35,7 +35,7 @@ transforms:
     inputs:
       - project_logs
     route:
-      kong: 'contains(string!(.appname), "kong")'
+      kong: 'contains(string!(.appname), "kong") || contains(string!(.appname), "envoy")'
       auth: 'contains(string!(.appname), "auth")'
       rest: 'contains(string!(.appname), "rest")'
       realtime: 'contains(string!(.appname), "realtime")'
