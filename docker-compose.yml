@@ -5,6 +5,10 @@
 #   Stop:               docker compose down
 #   Destroy:            docker compose down --volumes --remove-orphans
 #   Reset everything:  ./reset.sh
+#
+# TODO:
+#   - Podman does not support nested variable interpolation (${A:-${B}})
+#
 
 name: pgonrails
 
@@ -47,7 +51,7 @@ services:
     build: ./studio
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "node", "-e", "fetch('http://studio:${STUDIO_PORT}/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})" ]
+      test: [ "CMD-SHELL", "node -e \"fetch('http://localhost:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})\"" ]
       timeout: 10s
       interval: 5s
       retries: 3
@@ -89,7 +93,7 @@ services:
       LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
       LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
       LOGFLARE_URL: http://${ANALYTICS_HOST}:${ANALYTICS_PORT}
-      NEXT_PUBLIC_ENABLE_LOGS: true
+      NEXT_PUBLIC_ENABLE_LOGS: "true"
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
     volumes:
       - ./studio/snippets:/app/snippets:Z
@@ -193,6 +197,7 @@ services:
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
 
       # JSON array of signing JWKs (EC private + legacy symmetric)
+      # For Podman, use: GOTRUE_JWT_KEYS: ${JWT_KEYS}
       # GOTRUE_JWT_KEYS: ${JWT_KEYS:-[]}
 
       # When set to "true", to change their password, users must provide a OTP from their email or phone
@@ -257,8 +262,11 @@ services:
       PGRST_DB_MAX_ROWS: ${REST_DB_MAX_ROWS:-1000}
       PGRST_DB_EXTRA_SEARCH_PATH: ${REST_DB_EXTRA_SEARCH_PATH:-public}
       PGRST_DB_ANON_ROLE: anon
+
       # PostgREST accepts a plain-text symmetric secret, a single JWK, or a JWKS
+      # For Podman, use either PGRST_JWT_SECRET: ${JWT_SECRET} or PGRST_JWT_SECRET: ${JWT_JWKS}
       PGRST_JWT_SECRET: ${JWT_JWKS:-${JWT_SECRET}}
+      
       PGRST_DB_USE_LEGACY_GUCS: false
       PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
       PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
@@ -295,7 +303,8 @@ services:
       # Legacy symmetric HS256 key
       API_JWT_SECRET: ${JWT_SECRET}
 
-      # JWKS for token verification (EC public + legacy symmetric)
+      # JWKS for token verification (EC public + legacy symmetric).
+      # For Podman, use: API_JWT_JWKS: ${JWT_JWKS}
       # API_JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
 
       DNS_NODES: "''"
@@ -337,7 +346,8 @@ services:
       AUTH_JWT_SECRET: ${JWT_SECRET}
       AUTH_JWT_ALGORITHM: HS256
 
-      # JWKS for token verification (EC public + legacy symmetric)
+      # JWKS for token verification (EC public + legacy symmetric).
+      # For Podman, use: API_JWT_JWKS: ${JWT_JWKS}
       # JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
 
       # Database
@@ -356,7 +366,7 @@ services:
       # S3 Backend
       STORAGE_BACKEND: s3
       STORAGE_S3_ENDPOINT: http://${S3_HOST}:${S3_PORT}
-      STORAGE_S3_FORCE_PATH_STYLE: true
+      STORAGE_S3_FORCE_PATH_STYLE: "true"
       STORAGE_S3_MAX_SOCKETS: 200
       STORAGE_S3_REGION: default-region
       STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}  # name of top-level bucket. objects are stored in a structure of <top-level-bucket>/<tenant>/<supabase-bucket>/<object>
@@ -569,8 +579,8 @@ services:
 
       LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
       LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
-      LOGFLARE_SINGLE_TENANT: true
-      LOGFLARE_SUPABASE_MODE: true
+      LOGFLARE_SINGLE_TENANT: "true"
+      LOGFLARE_SUPABASE_MODE: "true"
 
       POSTGRES_BACKEND_URL: postgresql://supabase_admin:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/_supabase
       POSTGRES_BACKEND_SCHEMA: _analytics
