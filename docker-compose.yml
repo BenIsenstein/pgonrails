@@ -557,7 +557,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "http://localhost:${ANALYTICS_PORT}/health" ]
+      test: [ "CMD-SHELL", "curl -sSfL -o /dev/null http://localhost:${ANALYTICS_PORT}/health" ]
       timeout: 5s
       interval: 5s
       retries: 10
