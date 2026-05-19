@@ -51,7 +51,7 @@ services:
     build: ./studio
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "node -e \"fetch('http://localhost:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})\"" ]
+      test: [ "CMD-SHELL", "node -e \"fetch('http://localhost:${STUDIO_PORT}/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})\"" ]
       timeout: 10s
       interval: 5s
       retries: 3
@@ -74,9 +74,6 @@ services:
       POSTGRES_PORT: ${DB_PORT}
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD}
-
-      # See: https://supabase.com/docs/guides/self-hosting/remove-superuser-access
-      # POSTGRES_USER_READ_WRITE: postgres
 
       PGRST_DB_SCHEMAS: ${REST_DB_SCHEMAS}
       PGRST_DB_MAX_ROWS: ${REST_DB_MAX_ROWS:-1000}
