@@ -533,6 +533,9 @@ services:
   vector:
     build: ./vector
     restart: unless-stopped
+    depends_on:
+      analytics:
+        condition: service_healthy
     volumes:
       - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro,z
     healthcheck:
