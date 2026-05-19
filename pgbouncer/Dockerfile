@@ -1,1 +1,1 @@
-FROM edoburu/pgbouncer:v1.24.1-p1
+FROM edoburu/pgbouncer:v1.25.1-p0
