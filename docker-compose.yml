@@ -203,6 +203,8 @@ services:
       # For Podman, use: GOTRUE_JWT_KEYS: ${JWT_KEYS}
       # GOTRUE_JWT_KEYS: ${JWT_KEYS:-[]}
 
+      GOTRUE_JWT_ISSUER: http://localhost:${KONG_PORT}/auth/v1
+
       # When set to "true", to change their password, users must provide a OTP from their email or phone
       GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: ${GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION}
 
