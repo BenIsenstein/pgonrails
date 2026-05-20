@@ -20,11 +20,6 @@ services:
     restart: unless-stopped
     ports:
       - ${KONG_PORT}:${KONG_PORT}/tcp
-    volumes:
-      - ./volumes/api/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
-      - ./volumes/api/envoy/cds.yaml:/etc/envoy/cds.yaml:ro
-      - ./volumes/api/envoy/lds.template.yaml:/etc/envoy/lds.template.yaml:ro
-      - ./volumes/api/envoy/docker-entrypoint.sh:/docker-entrypoint.sh:ro
     depends_on:
       studio:
         condition: service_healthy
@@ -37,6 +32,20 @@ services:
       SERVICE_ROLE_KEY_ASYMMETRIC: ${SERVICE_ROLE_KEY_ASYMMETRIC:-}
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+      AUTH_HOST: ${AUTH_HOST}
+      AUTH_PORT: ${AUTH_PORT}
+      REST_HOST: ${REST_HOST}
+      REST_PORT: ${REST_PORT}
+      REALTIME_HOST: ${REALTIME_HOST}
+      REALTIME_PORT: ${REALTIME_PORT}
+      STORAGE_HOST: ${STORAGE_HOST}
+      STORAGE_PORT: ${STORAGE_PORT}
+      FUNCTIONS_HOST: ${FUNCTIONS_HOST}
+      FUNCTIONS_PORT: ${FUNCTIONS_PORT}
+      META_HOST: ${META_HOST}
+      META_PORT: ${META_PORT}
+      STUDIO_HOST: ${STUDIO_HOST}
+      STUDIO_PORT: ${STUDIO_PORT}
     healthcheck:
       # Using a TCP port check because this image does not include curl or wget.
       test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/8000'"]
