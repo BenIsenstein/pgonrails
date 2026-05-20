@@ -15,8 +15,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: auth
-                    port_value: 9999
+                    address: ${AUTH_HOST}
+                    port_value: ${AUTH_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s
@@ -47,8 +47,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: rest
-                    port_value: 3000
+                    address: ${REST_HOST}
+                    port_value: ${REST_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s
@@ -79,8 +79,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: realtime-dev.supabase-realtime
-                    port_value: 4000
+                    address: ${REALTIME_HOST}
+                    port_value: ${REALTIME_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s
@@ -111,8 +111,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: storage
-                    port_value: 5000
+                    address: ${STORAGE_HOST}
+                    port_value: ${STORAGE_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s
@@ -143,8 +143,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: functions
-                    port_value: 9000
+                    address: ${FUNCTIONS_HOST}
+                    port_value: ${FUNCTIONS_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s
@@ -174,8 +174,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: meta
-                    port_value: 8080
+                    address: ${META_HOST}
+                    port_value: ${META_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s
@@ -206,8 +206,8 @@ resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: studio
-                    port_value: 3000
+                    address: ${STUDIO_HOST}
+                    port_value: ${STUDIO_PORT}
     health_checks:
       - timeout: 2s
         interval: 5s

@@ -1,7 +1,7 @@
 FROM envoyproxy/envoy:v1.37.2
 
 COPY ./envoy.yaml /etc/envoy/envoy.yaml
-COPY ./cds.yaml /etc/envoy/cds.yaml
+COPY ./cds.template.yaml /etc/envoy/cds.template.yaml
 COPY ./lds.template.yaml /etc/envoy/lds.template.yaml
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 

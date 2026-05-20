@@ -16,7 +16,25 @@ sed -e "s|\${ANON_KEY}|${ANON_KEY}|g" \
     -e "s|\${SUPABASE_PUBLISHABLE_KEY}|${SUPABASE_PUBLISHABLE_KEY}|g" \
     -e "s|\${SUPABASE_SECRET_KEY}|${SUPABASE_SECRET_KEY}|g" \
     -e "s|\${DASHBOARD_BASIC_AUTH}|${DASHBOARD_BASIC_AUTH}|g" \
+    -e "s|\${REALTIME_HOST}|${REALTIME_HOST}|g" \
     /etc/envoy/lds.template.yaml > /etc/envoy/lds.yaml
+
+# Process the cds.yaml template with service host/port environment variables
+sed -e "s|\${AUTH_HOST}|${AUTH_HOST}|g" \
+    -e "s|\${AUTH_PORT}|${AUTH_PORT}|g" \
+    -e "s|\${REST_HOST}|${REST_HOST}|g" \
+    -e "s|\${REST_PORT}|${REST_PORT}|g" \
+    -e "s|\${REALTIME_HOST}|${REALTIME_HOST}|g" \
+    -e "s|\${REALTIME_PORT}|${REALTIME_PORT}|g" \
+    -e "s|\${STORAGE_HOST}|${STORAGE_HOST}|g" \
+    -e "s|\${STORAGE_PORT}|${STORAGE_PORT}|g" \
+    -e "s|\${FUNCTIONS_HOST}|${FUNCTIONS_HOST}|g" \
+    -e "s|\${FUNCTIONS_PORT}|${FUNCTIONS_PORT}|g" \
+    -e "s|\${META_HOST}|${META_HOST}|g" \
+    -e "s|\${META_PORT}|${META_PORT}|g" \
+    -e "s|\${STUDIO_HOST}|${STUDIO_HOST}|g" \
+    -e "s|\${STUDIO_PORT}|${STUDIO_PORT}|g" \
+    /etc/envoy/cds.template.yaml > /etc/envoy/cds.yaml
 
 if [ -n "$SUPABASE_SECRET_KEY" ] && \
    [ -n "$SUPABASE_PUBLISHABLE_KEY" ] && \
