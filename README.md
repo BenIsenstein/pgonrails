@@ -25,7 +25,7 @@ Prefer to use Railway's web UI?
 
 Setup environment and volumes
 
-`./setup.sh`
+`./setup-env.sh`
 
 Run the app locally
 

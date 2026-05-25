@@ -59,7 +59,7 @@ git clone YOUR_REPO
 Run your Supabase project locally:
 
 ```sh
-cd YOUR_REPO && ./setup.sh && docker compose up
+cd YOUR_REPO && ./setup-env.sh && docker compose up
 ```
 
 Commit new code and watch your project deploy continuously :)

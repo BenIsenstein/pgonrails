@@ -1,10 +1,10 @@
 # Usage
-#   Setup:              ./setup.sh
-#   Start:              docker compose up
-#   Migrate DB:         ./migrate-local.sh
-#   Stop:               docker compose down
-#   Destroy:            docker compose down --volumes --remove-orphans
-#   Reset everything:  ./reset.sh
+#   Setup env and volumes: ./setup-env.sh
+#   Start:                 docker compose up
+#   Migrate DB:            ./migrate-local.sh
+#   Stop:                  docker compose down
+#   Destroy:               docker compose down --volumes --remove-orphans
+#   Reset everything:      ./reset.sh
 #
 # TODO:
 #   - Podman does not support nested variable interpolation (${A:-${B}})
