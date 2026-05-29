@@ -4,7 +4,7 @@
 #   Migrate DB:            ./migrate-local.sh
 #   Stop:                  docker compose down
 #   Destroy:               docker compose down --volumes --remove-orphans
-#   Reset everything:      ./reset.sh
+#   Reset everything:   sh reset.sh
 #
 # TODO:
 #   - Podman does not support nested variable interpolation (${A:-${B}})
