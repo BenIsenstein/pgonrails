@@ -47,6 +47,28 @@ services:
 
       DB_PRIVATE_CONNECTION_STRING: postgres://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
+  app:
+    build:
+      context: ./app
+      dockerfile: dev.Dockerfile
+    restart: unless-stopped
+    ports:
+      - 3001:3001
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    environment:
+      VITE_SUPABASE_URL: http://localhost:${KONG_PORT}
+      VITE_SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      DB_PRIVATE_CONNECTION_STRING: postgres://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+
   studio:
     build: ./studio
     restart: unless-stopped
