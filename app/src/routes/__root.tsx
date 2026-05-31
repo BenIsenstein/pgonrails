@@ -119,10 +119,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               {user ? (
                 <>
                   <span className="mr-2">{user.email}</span>
-                  <Link to="/logout">Logout</Link>
+                  <Link to="/signout">Sign out</Link>
                 </>
               ) : (
-                <Link to="/login">Login</Link>
+                <Link to="/signin">Sign in</Link>
               )}
               <ModeToggle />
             </div>

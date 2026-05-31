@@ -1,36 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { Login } from '../components/Login'
-import { getSupabaseServerClient } from '../utils/supabase'
-
-export const loginFn = createServerFn({ method: 'POST' })
-  .inputValidator((d: { email: string; password: string }) => d)
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    })
-
-    if (error) {
-      return {
-        error: true,
-        message: error.message,
-      }
-    }
-  })
+// AI: Auth guard layout route. Protects all child routes under /_authed/*.
+// Uses throw redirect() to send unauthenticated users to /signin with
+// original-destination preserved in ?redirect search param.
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authed')({
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, location }) => {
     if (!context.user) {
-      throw new Error('Not authenticated')
+      throw redirect({
+        to: '/signin',
+        search: { redirect: location.href },
+      })
     }
-  },
-  errorComponent: ({ error }) => {
-    if (error.message === 'Not authenticated') {
-      return <Login />
-    }
-
-    throw error
   },
 })

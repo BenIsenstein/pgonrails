@@ -23,18 +23,22 @@ Migration from Next.js `/site` to TanStack Start — barebones SaaS template wit
 - [x] **2.8** Remove example posts code, add placeholder dashboard route
 - [x] **2.9** Best-practices audit: fix plugin order, move shadcn to devDeps, remove unused deps, add engines field
 
-## Phase 3: Auth — Server Functions & Supabase Client
+## Phase 3: Auth — Server Functions & Supabase Client ✅
 
-- [ ] **3.1** Port Supabase client utilities (server client with cookie handling for TanStack Start's server functions)
-- [ ] **3.2** Implement `fetchUser` server function in root route `beforeLoad` (already in example — adapt for our cookie/session pattern)
-- [ ] **3.3** Add auth guard: redirect unauthenticated users from protected routes (`/dashboard`, `/settings`) to `/signin`
-- [ ] **3.4** Implement `signup` server function (email/password, writes full_name to user metadata)
-- [ ] **3.5** Implement `signin` server function (email/password, redirect to `/dashboard`)
-- [ ] **3.6** Implement `signout` server function (invalidate session, redirect to `/`)
-- [ ] **3.7** Implement `forgotPassword` server function (send reset email)
-- [ ] **3.8** Implement `resetPassword` server function (update password)
-- [ ] **3.9** Implement `deleteAccount` server function (uses service_role admin client)
-- [ ] **3.10** Handle auto-login after signup (when GOTRUE_MAILER_AUTOCONFIRM is enabled)
+- [x] **3.1** Port Supabase client utilities (server client with cookie handling + admin client with service_role key)
+- [x] **3.2** `fetchUser` server function in root route `beforeLoad` (returns `{ email }` or `null`)
+- [x] **3.3** Auth guard: `_authed.tsx` throws `redirect({ to: '/signin', search: { redirect } })` when no user
+- [x] **3.4** `signUpFn` — email/password, splits full_name into first_name/last_name metadata
+- [x] **3.5** `signInFn` — email/password, returns `AuthResult` discriminated union
+- [x] **3.6** `signOutFn` + `/signout` route (invalidate session, redirect to `/`)
+- [x] **3.7** `forgotPasswordFn` — sends reset email with redirect to `/reset-password`
+- [x] **3.8** `resetPasswordFn` — updates password (user has session from email link)
+- [x] **3.9** `deleteAccountFn` — uses admin client to delete user, then signs out session
+- [x] **3.10** Auto-login after signup: handled inherently by Supabase when GOTRUE_MAILER_AUTOCONFIRM=true (session cookies set in signUp response)
+
+All server functions centralized in `app/src/server/auth.server.ts`.
+Return type: `AuthResult = { success: true } | { success: false; message: string }`.
+Pattern: return objects for inline form errors, throw redirect() for navigation.
 
 ## Phase 4: Pages & Routes
 
@@ -55,11 +59,7 @@ Migration from Next.js `/site` to TanStack Start — barebones SaaS template wit
 
 ## Phase 5: Avatar / Profile Picture
 
-- [ ] **5.1** Copy migrations into `/app/supabase/migrations/`:
-  - `20251007001359_create_private_schema.sql`
-  - `20251007001610_settings.sql`
-  - `20250929033529_add_avatars_bucket.sql`
-  - `20260205063412_avatars_restrict_mime_type.sql`
+- [x] **5.1** Migrations already copied in Phase 2.7
 - [ ] **5.2** Implement avatar upload component (Supabase Storage, per-user folder `avatars/{uid}/`)
 - [ ] **5.3** Port the `trg_objects_user_avatar_img_name` trigger logic (sync avatar metadata to `auth.users.raw_user_meta_data`)
 - [ ] **5.4** Display avatar in navbar and settings page using Supabase Storage public URLs
@@ -112,6 +112,8 @@ Migration from Next.js `/site` to TanStack Start — barebones SaaS template wit
 | Agent hints | AGENTS.md + inline comments | Best balance of discoverability and context |
 | Docker | Dev container with volume mount | Consistent with rest of stack |
 | DB schema | 4 migrations (no Trello) | Only auth/avatars infrastructure |
+| Auth error handling | Return discriminated unions for forms, throw redirect() for nav | Idiomatic TanStack Start; inline errors for UX, redirects for guards |
+| Auth server fns | Single `auth.server.ts` file | Centralized, easy to find, single import |
 
 ---
 
