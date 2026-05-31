@@ -14,6 +14,8 @@ import { NotFound } from '../components/NotFound'
 import appCss from '../styles/app.css?url'
 import { seo } from '../utils/seo'
 import { getSupabaseServerClient } from '../utils/supabase'
+import { ThemeProvider } from '../components/theme-provider'
+import { ModeToggle } from '../components/mode-toggle'
 
 const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
   const supabase = getSupabaseServerClient()
@@ -97,42 +99,37 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { user } = Route.useRouteContext()
 
   return (
-    <html>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <div className="p-2 flex gap-2 text-lg">
-          <Link
-            to="/"
-            activeProps={{
-              className: 'font-bold',
-            }}
-            activeOptions={{ exact: true }}
-          >
-            Home
-          </Link>{' '}
-          <Link
-            to="/posts"
-            activeProps={{
-              className: 'font-bold',
-            }}
-          >
-            Posts
-          </Link>
-          <div className="ml-auto">
-            {user ? (
-              <>
-                <span className="mr-2">{user.email}</span>
-                <Link to="/logout">Logout</Link>
-              </>
-            ) : (
-              <Link to="/login">Login</Link>
-            )}
+        <ThemeProvider defaultTheme="system" storageKey="pgonrails-theme">
+          <div className="p-2 flex gap-2 text-lg">
+            <Link
+              to="/"
+              activeProps={{
+                className: 'font-bold',
+              }}
+              activeOptions={{ exact: true }}
+            >
+              Home
+            </Link>
+            <div className="ml-auto flex items-center gap-2">
+              {user ? (
+                <>
+                  <span className="mr-2">{user.email}</span>
+                  <Link to="/logout">Logout</Link>
+                </>
+              ) : (
+                <Link to="/login">Login</Link>
+              )}
+              <ModeToggle />
+            </div>
           </div>
-        </div>
-        <hr />
-        {children}
+          <hr />
+          {children}
+        </ThemeProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>

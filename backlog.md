@@ -4,20 +4,24 @@ Migration from Next.js `/site` to TanStack Start — barebones SaaS template wit
 
 ---
 
-## Phase 1: Scaffold & Infrastructure
+## Phase 1: Scaffold & Infrastructure ✅
 
-- [ ] **1.1** Clone `start-supabase-basic` example into `/app` via `npx gitpick TanStack/router/tree/main/examples/react/start-supabase-basic app`
-- [ ] **1.2** Rename package to `pgonrails-start`, verify `pnpm install` and `pnpm dev` work on port 3001
-- [ ] **1.3** Add Docker service block to `docker-compose.yml` — Node dev container, volume-mount `/app`, expose 3001, run `pnpm dev`
-- [ ] **1.4** Configure Supabase env vars (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY) to point at self-hosted stack
+- [x] **1.1** Clone `start-supabase-basic` example into `/app` via `npx gitpick TanStack/router/tree/main/examples/react/start-supabase-basic app`
+- [x] **1.2** Rename package to `pgonrails-start`, verify `pnpm install` and `pnpm dev` work on port 3001
+- [x] **1.3** Add Docker service block to `docker-compose.yml` — Node dev container, volume-mount `/app`, expose 3001, run `pnpm dev`
+- [x] **1.4** Configure Supabase env vars (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY) to point at self-hosted stack
 
-## Phase 2: UI Foundation
+## Phase 2: UI Foundation ✅
 
-- [ ] **2.1** Run `npx shadcn@latest init` inside `/app` — configure for Vite, Tailwind v4, New York style, neutral base
-- [ ] **2.2** Set up CSS variables and oklch theming (dark mode support) in global stylesheet
-- [ ] **2.3** Add dark mode toggle mechanism (CSS class strategy, no `next-themes` — use a simple React context or cookie-based approach)
-- [ ] **2.4** Install `lucide-react` for icons
-- [ ] **2.5** Add shadcn components needed for auth: `button`, `input`, `label`, `card`, `avatar`, `dropdown-menu`
+- [x] **2.1** Run `npx shadcn@latest init` inside `/app` — configure for Vite, Tailwind v4, Radix Nova style, neutral base
+- [x] **2.2** Set up CSS variables and oklch theming (dark mode support) in global stylesheet
+- [x] **2.3** Add dark mode toggle using shadcn's official TanStack Start pattern (ScriptOnce + ThemeProvider)
+- [x] **2.4** Install `lucide-react` for icons
+- [x] **2.5** Add shadcn components needed for auth: `button`, `input`, `label`, `card`, `avatar`, `dropdown-menu`
+- [x] **2.6** Add Nitro plugin for production deployment, production Dockerfile, correct plugin order
+- [x] **2.7** Copy 4 existing migrations (private_schema, settings, avatars_bucket, avatars_restrict_mime_type)
+- [x] **2.8** Remove example posts code, add placeholder dashboard route
+- [x] **2.9** Best-practices audit: fix plugin order, move shadcn to devDeps, remove unused deps, add engines field
 
 ## Phase 3: Auth — Server Functions & Supabase Client
 
