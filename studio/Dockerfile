@@ -1,3 +1,3 @@
-FROM supabase/studio:2026.04.27-sha-5f60601
+FROM supabase/studio:2026.06.01-sha-a4334a2
 
 COPY ./snippets /app/snippets
