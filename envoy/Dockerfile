@@ -1,4 +1,4 @@
-FROM envoyproxy/envoy:v1.38.0
+FROM undefined
 
 COPY ./envoy.yaml /etc/envoy/envoy.yaml
 COPY ./cds.template.yaml /etc/envoy/cds.template.yaml
