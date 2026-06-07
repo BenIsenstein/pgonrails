@@ -237,8 +237,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      analytics:
-        condition: service_healthy
     environment:
       PGRST_SERVER_HOST: ${REST_LISTEN}
       PGRST_SERVER_PORT: ${REST_PORT}
