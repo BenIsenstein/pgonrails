@@ -1,0 +1,80 @@
+# This override adds the following to the self-hosted Supabase configuration:
+#   - Logflare: Log management and event analytics platform
+#   - Vector: High-performance observability data pipeline for logs
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.logs.yml up -d
+
+services:
+
+  studio:
+    depends_on:
+      analytics:
+        condition: service_healthy
+    environment:
+      LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
+      LOGFLARE_URL: http://${ANALYTICS_HOST}:${ANALYTICS_PORT}
+      ENABLED_FEATURES_LOGS_ALL: "true"
+
+  analytics:
+    build: ./analytics
+    restart: unless-stopped
+    # ports:
+    #   - ${ANALYTICS_PORT}:${ANALYTICS_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sSfL -o /dev/null http://localhost:${ANALYTICS_PORT}/health" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      LOGFLARE_NODE_HOST: ${ANALYTICS_LISTEN}
+      
+      DB_USERNAME: supabase_admin
+      DB_DATABASE: _supabase
+      DB_HOSTNAME: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_PASSWORD: ${DB_SUPERUSER_PASSWORD}
+      DB_SCHEMA: _analytics
+
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
+      LOGFLARE_SINGLE_TENANT: "true"
+      LOGFLARE_SUPABASE_MODE: "true"
+      LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
+
+      # Comment out the following two variables when switching to
+      # the BigQuery backend for logs
+      POSTGRES_BACKEND_URL: postgresql://supabase_admin:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/_supabase
+      POSTGRES_BACKEND_SCHEMA: _analytics
+
+      # Uncomment to use the BigQuery backend for logs
+      #GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
+      #GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER}
+     
+  vector:
+    build: ./vector
+    restart: unless-stopped
+    depends_on:
+      analytics:
+        condition: service_healthy
+    volumes:
+      - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro,z
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://${VECTOR_HOST}:${VECTOR_PORT}/health" ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      VECTOR_LISTEN: ${VECTOR_LISTEN}
+      VECTOR_PORT: ${VECTOR_PORT}
+      ANALYTICS_HOST: ${ANALYTICS_HOST}
+      ANALYTICS_PORT: ${ANALYTICS_PORT}
+      KONG_HOST: ${KONG_HOST}
+      KONG_PORT: ${KONG_PORT}
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+    security_opt:
+      - "label=disable"

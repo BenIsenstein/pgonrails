@@ -3,3 +3,4 @@ volumes
 db/supabase/.temp
 site/supabase/.temp
 .vscode
+app

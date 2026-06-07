@@ -37,14 +37,7 @@ RUN npm run build
 
 FROM base AS runner
 
-ENV SUPABASE_CLI_VERSION="v2.75.0"
-
-# Install supabase CLI for migrations on startup
-RUN apt-get update && apt-get install -y curl unzip \
-  && curl -L https://github.com/supabase/cli/releases/download/${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz -o supabase.tar.gz \
-  && tar -xvzf supabase.tar.gz \
-  && mv supabase /usr/local/bin/ \
-  && rm supabase.tar.gz
+RUN npm i -g supabase
 
 # Create a non-root user for safety
 RUN groupadd --system nextjs && useradd --system --create-home --gid nextjs nextjs
