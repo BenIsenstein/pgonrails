@@ -7,7 +7,7 @@ import { getSupabaseServerClient, getSupabaseAdminClient } from '../utils/supaba
 
 // AI: Discriminated union type for auth operation results.
 // Components check `result.success` to determine whether to show an error message.
-export type AuthResult =
+type AuthResult =
   | { success: true }
   | { success: false; message: string }
 
@@ -54,20 +54,6 @@ export const signUpFn = createServerFn({ method: 'POST' })
         },
       },
     })
-
-    if (error) {
-      return { success: false, message: error.message }
-    }
-
-    return { success: true }
-  })
-
-// --- Sign Out ---
-
-export const signOutFn = createServerFn({ method: 'POST' })
-  .handler(async (): Promise<AuthResult> => {
-    const supabase = getSupabaseServerClient()
-    const { error } = await supabase.auth.signOut()
 
     if (error) {
       return { success: false, message: error.message }

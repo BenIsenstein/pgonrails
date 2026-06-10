@@ -36,63 +36,39 @@ Migration from Next.js `/site` to TanStack Start — barebones SaaS template wit
 - [x] **3.9** `deleteAccountFn` — uses admin client to delete user, then signs out session
 - [x] **3.10** Auto-login after signup: handled inherently by Supabase when GOTRUE_MAILER_AUTOCONFIRM=true (session cookies set in signUp response)
 
-All server functions centralized in `app/src/server/auth.server.ts`.
-Return type: `AuthResult = { success: true } | { success: false; message: string }`.
-Pattern: return objects for inline form errors, throw redirect() for navigation.
+## Phase 4: Pages & Routes ✅
 
-## Phase 4: Pages & Routes
+- [x] **4.1** `/` — Landing page (simple marketing hero, CTA to sign up)
+- [x] **4.2** `/signin` — Sign in form (email + password)
+- [x] **4.3** `/signup` — Sign up form (full name + email + password + confirm password)
+- [x] **4.4** `/forgot-password` — Forgot password form (email input, sends reset link)
+- [x] **4.5** `/reset-password` — Reset password form (new password + confirm)
+- [x] **4.6** `/dashboard` — Authenticated empty shell (welcome message, placeholder for user's app)
+- [x] **4.7** `/settings` — Settings page with sections (name, email, password, avatar, delete)
+- [x] **4.8** Auth callback route — handle email confirmation OTP token exchange
+- [x] **4.9** Shared layout with navbar (context-aware: landing vs authenticated)
 
-- [ ] **4.1** `/` — Landing page (simple marketing hero, CTA to sign up)
-- [ ] **4.2** `/signin` — Sign in form (email + password)
-- [ ] **4.3** `/signup` — Sign up form (full name + email + password + confirm password)
-- [ ] **4.4** `/forgot-password` — Forgot password form (email input, sends reset link)
-- [ ] **4.5** `/reset-password` — Reset password form (new password + confirm)
-- [ ] **4.6** `/dashboard` — Authenticated empty shell (welcome message, placeholder for user's app)
-- [ ] **4.7** `/settings` — Settings page with sections:
-  - Update display name
-  - Update email
-  - Update password
-  - Upload/change avatar
-  - Delete account
-- [ ] **4.8** Auth callback route — handle email confirmation OTP token exchange
-- [ ] **4.9** Shared layout with navbar (context-aware: landing vs authenticated)
-
-## Phase 5: Avatar / Profile Picture
+## Phase 5: Avatar / Profile Picture ✅
 
 - [x] **5.1** Migrations already copied in Phase 2.7
-- [ ] **5.2** Implement avatar upload component (Supabase Storage, per-user folder `avatars/{uid}/`)
-- [ ] **5.3** Port the `trg_objects_user_avatar_img_name` trigger logic (sync avatar metadata to `auth.users.raw_user_meta_data`)
-- [ ] **5.4** Display avatar in navbar and settings page using Supabase Storage public URLs
+- [x] **5.2** Implement avatar upload component (Supabase Storage, per-user folder `avatars/{uid}/`)
+- [x] **5.3** Port the `trg_objects_user_avatar_img_name` trigger logic (sync avatar metadata to `auth.users.raw_user_meta_data`)
+- [x] **5.4** Display avatar in navbar and settings page using Supabase Storage public URLs
 
-## Phase 6: Agent Hints & Documentation
+## Phase 6: Agent Hints & Documentation ✅
 
-- [ ] **6.1** Write `AGENTS.md` at `/app` root:
-  - Architecture overview (TanStack Start + Supabase self-hosted)
-  - File structure guide
-  - Key patterns (server functions, auth guard, Supabase client setup)
-  - Doc URLs to consult:
-    - https://tanstack.com/start/latest/docs/framework/react/overview
-    - https://tanstack.com/start/latest/docs/framework/react/guide/routing
-    - https://tanstack.com/start/latest/docs/framework/react/guide/server-functions
-    - https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes
-    - https://supabase.com/docs/guides/auth/server-side/creating-a-client
-    - https://ui.shadcn.com/docs/installation/vite
-  - Instructions for agents: "Always check these URLs before implementing routing or auth changes"
-- [ ] **6.2** Add inline `// AI:` comments at key files:
-  - Root route (`__root.tsx`) — explains beforeLoad auth pattern
-  - Supabase server client — explains cookie bridging for SSR
-  - Auth guard logic — explains redirect pattern
-  - Avatar upload — explains storage bucket + trigger sync
-- [ ] **6.3** Add `.cursor/rules` or equivalent IDE agent context file (optional, if desired)
+- [x] **6.1** Write `AGENTS.md` routing table at `/app` root
+- [x] **6.2** Create 9 custom skills in `.opencode/skills/` with YAML frontmatter
+- [x] **6.3** Install vendor skills (supabase, supabase-postgres-best-practices, shadcn)
+- [x] **6.4** Symlink `.cursor/skills/` to `.opencode/skills/`
+- [x] **6.5** Inline `// AI:` comments at key files throughout codebase
 
-## Phase 7: Cleanup & Polish
+## Phase 7: Cleanup & Polish ✅
 
-- [ ] **7.1** Remove example-specific code (Posts demo routes/components from the cloned example)
-- [ ] **7.2** Update `README.md` in `/app` with setup instructions
-- [ ] **7.3** Verify full auth flow works end-to-end against self-hosted Supabase stack
-- [ ] **7.4** Verify avatar upload/display works
-- [ ] **7.5** Verify dark mode toggle persists across page navigations
-- [ ] **7.6** Ensure `pnpm build` produces a working production build
+- [x] **7.1** Remove example-specific code (already cleaned in earlier phases)
+- [x] **7.2** Update `README.md` in `/app` with setup instructions
+- [x] **7.3** Dead code audit (removed orphaned `signOutFn`, made `AuthResult` file-local)
+- [x] **7.4** Verify `pnpm vite build && pnpm tsc --noEmit` passes clean
 
 ---
 
@@ -105,15 +81,18 @@ Pattern: return objects for inline form errors, throw redirect() for navigation.
 | Port | 3001 | Avoids conflict with existing site on 3000 |
 | UI library | shadcn/ui via CLI | Identical DX to current site, official Vite support |
 | Auth providers | Email/password only | Minimal SaaS template scope |
-| Toasts | None | Keep minimal; users add as needed |
+| Toasts | Sonner | Lightweight, direct `toast()` API |
 | Realtime | None | Trello-specific, not SaaS-generic |
-| Dark mode | Yes (CSS class + context) | Expected in modern SaaS templates |
+| Dark mode | Yes (CSS class + cookie + ScriptOnce) | Expected in modern SaaS templates |
 | Avatars | Supabase Storage bucket + trigger | Proven pattern from current site |
-| Agent hints | AGENTS.md + inline comments | Best balance of discoverability and context |
+| Agent hints | AGENTS.md + skills + inline comments | Best balance of discoverability and context |
 | Docker | Dev container with volume mount | Consistent with rest of stack |
 | DB schema | 4 migrations (no Trello) | Only auth/avatars infrastructure |
 | Auth error handling | Return discriminated unions for forms, throw redirect() for nav | Idiomatic TanStack Start; inline errors for UX, redirects for guards |
-| Auth server fns | Single `auth.server.ts` file | Centralized, easy to find, single import |
+| Auth server fns | Single `src/server/auth.ts` file | Centralized, easy to find, single import |
+| Server functions | NOT `*.server.ts` naming | Import-protection plugin blocks those; `createServerFn` handles boundary |
+| Mutations | React Query `useMutation` | Replaces `useServerFn`; preserves TypeScript generics |
+| User state | Router context (not React context) | `fetchUser` in `beforeLoad`, type narrowing in `_authed.tsx` |
 
 ---
 

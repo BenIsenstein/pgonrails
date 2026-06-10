@@ -1,57 +1,117 @@
-# TanStack Start - Supabase Example
+# PgOnRails — App
 
-A TanStack Start example demonstrating integration with Supabase for authentication and database.
+Barebones SaaS template built with TanStack Start, self-hosted Supabase, shadcn/ui, and Tailwind v4.
 
-- [TanStack Router Docs](https://tanstack.com/router)
-- [Supabase Documentation](https://supabase.com/docs)
+## What's Included
 
-## Start a new project based on this example
+- Email/password authentication (sign up, sign in, forgot/reset password, delete account)
+- Avatar upload with Supabase Storage
+- User settings (display name, email, password, avatar)
+- Dark mode (Light / Dark / System) with cookie persistence
+- Protected routes with type-safe auth guards
+- Docker-based development environment with self-hosted Supabase
 
-To start a new project based on this example, run:
+## Tech Stack
 
-```sh
-npx gitpick TanStack/router/tree/main/examples/react/start-supabase-basic start-supabase-basic
+| Layer | Technology |
+|-------|-----------|
+| Framework | TanStack Start (Vite + Nitro) |
+| Router | TanStack Router (file-based) |
+| Data | React Query + Supabase JS client |
+| Database | PostgreSQL via self-hosted Supabase |
+| UI | shadcn/ui + Tailwind v4 (oklch) |
+| Auth | Supabase Auth (email/password) |
+| Storage | Supabase Storage (avatars bucket) |
+| Dev env | Docker Compose |
+
+## Quick Start (Docker)
+
+```bash
+# 1. Copy env file
+cp app/.env.example app/.env
+
+# 2. Start everything (app + self-hosted Supabase)
+docker compose up --build
+
+# 3. Open
+open http://localhost:3001
 ```
 
-## Setup
+The dev container handles `pnpm install`, starts the Supabase stack, applies migrations, and runs the Vite dev server.
 
-This example requires Supabase configuration. The `.env` file contains the necessary environment variables:
+## Quick Start (Local)
 
-```env
-SUPABASE_URL=your-project-url
-SUPABASE_ANON_KEY=your-anon-key
-```
+```bash
+cd app
 
-You'll need to:
-
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Get your project URL and anon key from the project settings
-3. Update the `.env` file with your credentials
-
-## Getting Started
-
-From your terminal:
-
-```sh
+# 1. Install
 pnpm install
+
+# 2. Start Supabase (requires Docker)
+npx supabase start
+
+# 3. Copy env and fill in keys from `supabase status`
+cp .env.example .env
+
+# 4. Run dev server
 pnpm dev
 ```
 
-This starts your app in development mode, rebuilding assets on file changes.
+## Environment Variables
+
+See `.env.example` for all required variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `SUPABASE_URL` | Supabase API URL (server-side) |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key (server-side) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Admin key for user deletion (server-side only) |
+| `SITE_URL` | App URL for auth email redirects |
+| `VITE_SUPABASE_URL` | Supabase URL (client-side) |
+| `VITE_SUPABASE_ANON_KEY` | Anon key (client-side) |
+| `VITE_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION` | Enable OTP verification for password changes |
+
+## Project Structure
+
+```
+app/
+├── src/
+│   ├── routes/           # File-based routing (TanStack Router)
+│   │   ├── __root.tsx    # Root layout (fetchUser, Navbar, Toaster)
+│   │   ├── _authed.tsx   # Auth guard layout
+│   │   ├── _authed/      # Protected pages (settings, dashboard)
+│   │   ├── signin.tsx    # Public auth pages
+│   │   └── ...
+│   ├── server/
+│   │   └── auth.ts       # Server functions (signIn, signUp, etc.)
+│   ├── components/
+│   │   ├── ui/           # shadcn/ui primitives
+│   │   ├── settings/     # Settings page components
+│   │   └── navbar.tsx    # App navbar
+│   ├── utils/
+│   │   ├── supabase.ts   # Server Supabase client (cookie-bridged)
+│   │   ├── supabase-browser.ts  # Browser client
+│   │   └── types.ts      # AppUser type
+│   └── app.css           # Tailwind v4 + oklch theme variables
+├── supabase/
+│   └── migrations/       # SQL migrations (applied in timestamp order)
+├── .opencode/skills/     # Agent skill definitions
+└── AGENTS.md             # Agent routing table
+```
 
 ## Build
 
-To build the app for production:
-
-```sh
-pnpm build
+```bash
+cd app
+pnpm vite build     # Production build
+pnpm tsc --noEmit   # Type check
 ```
 
-## Supabase Integration
+## Useful URLs (Local Dev)
 
-This example demonstrates:
-
-- Authentication with Supabase Auth
-- Database queries with Supabase client
-- Real-time subscriptions
-- Server-side data fetching
+| Service | URL |
+|---------|-----|
+| App | http://localhost:3001 |
+| Supabase Studio | http://localhost:54323 |
+| Inbucket (email) | http://localhost:54324 |
+| Supabase API | http://localhost:54321 |
