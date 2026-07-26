@@ -2,6 +2,8 @@
 
 This is a Docker Compose setup for self-hosting Supabase. It is compatible with hosting on Railway. It is being closely maintained to support the full self-hosted feature set.
 
+PG On Rails is betting on **TanStack Start** as the full-stack React framework of the future, and now ships a `site` service built with Start!
+
 PG On Rails is **local-first** and provides an amazing developer experience. Run the entire stack locally in a way that is *transparent, configurable, and **versionable in code***. By tracking **every service in its own directory**, we can *co-locate config, app logic and build information (Dockerfile) for each service,* and utilize the modern deployment pattern of **watch paths in monorepos.**
 
 My longterm vision is to make PG On Rails *the best strategy for bootstrapping, building and self-hosting Supabase projects, on the Railway platform and beyond.*
@@ -53,7 +55,7 @@ Every service gets its own directory, so watchpaths just work. Add new functions
 
 ### Your frontend, included in the stack
 
-Reduce context-switching and host as much of your stack as possible on the same platform. For NextJS, Django, htmx or any server-rendered frontend, get fast and secure access to Supabase data APIs via the shared internal network.
+Reduce context-switching and host as much of your stack as possible on the same platform. For TanStack, Django, htmx or any server-rendered frontend, get fast and secure access to Supabase data APIs via the shared internal network.
 
 ### Full control over your application
 
@@ -99,11 +101,11 @@ For the hackers. Configure every aspect of your Supabase application and version
 
 ## Frontend included with seamless dev mode
 
-We included a frontend app in the stack and named it `site`. The frontend site is a NextJS app built with `create-next-app`, `tailwindCSS` and `shadcn/ui`. It includes basic auth functionality so you can begin building user experiences out of the box.
+We included a frontend app in the stack and named it `site`. The frontend site is a TanStack Start app built with `TanStack Start`, `tailwindCSS` and `shadcn/ui`. It includes basic auth functionality so you can begin building user experiences out of the box.
 
 ### Security note (Next.js)
 
-Some deployment platforms (including Railway) run dependency vulnerability scans as part of the build. If you see a failure referencing `CVE-2025-55184` / `GHSA-mwv6-3258-q52c`, the fix is to ensure the `site` app uses a patched `next` version:
+Some deployment platforms (including Railway) run dependency vulnerability scans as part of the build. If you see a failure referencing `CVE-2025-55184` / `GHSA-mwv6-3258-q52c`, and you're continuing to use a NextJS frontend, the fix is to ensure the `site` app uses a patched `next` version:
 
 - `site/package.json` should be `next >= 15.5.9`
 - Then re-generate the lockfile from the `site` directory: `npm install`
@@ -122,7 +124,7 @@ The project is setup so that running the Docker Compose stack locally **runs the
         - ./site:/app
 ```
 
-The local development experience, which runs on Docker Compose, points to a `dev.Dockerfile` in the `site` repo. This dockerfile runs the NextJS dev server. For production, however, Railway looks for a `Dockerfile` by default (no `dev` prefix), and will deploy using the `Dockerfile` which builds and serves the optimized site.
+The local development experience, which runs on Docker Compose, points to a `dev.Dockerfile` in the `site` repo. This dockerfile runs the vite dev server. For production, however, Railway looks for a `Dockerfile` by default (no `dev` prefix), and will deploy using the `Dockerfile` which builds and serves the optimized site.
 
 The other strategy which enables smooth local development inside Docker, is mounting the entire `site` directory as a volume inside the dev container (`volumes: - ./site:/app`). This exposes the codebase from your local filesystem inside the container, where the dev server can pick up any changes and deliver that hot-reload experience we all love.
 
