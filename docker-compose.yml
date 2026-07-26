@@ -23,11 +23,7 @@ services:
       - ${SITE_PORT}:${SITE_PORT}
     volumes:
       - ./site:/app
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${SITE_PORT}/health" ]
-      timeout: 10s
-      interval: 5s
-      retries: 3
+      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy
@@ -37,36 +33,15 @@ services:
       HOSTNAME: ${SITE_LISTEN}
       PORT: ${SITE_PORT}
 
-      NEXT_PUBLIC_SITE_URL: http://localhost:${SITE_PORT}
-      NEXT_PUBLIC_SUPABASE_URL: http://localhost:${KONG_PORT}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
-      NEXT_PUBLIC_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: ${GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION}
-      
-      SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
-      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-
-      DB_PRIVATE_CONNECTION_STRING: postgres://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-
-  app:
-    build:
-      context: ./app
-      dockerfile: dev.Dockerfile
-    restart: unless-stopped
-    ports:
-      - 3001:3001
-    volumes:
-      - ./app:/app
-      - /app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
-      storage:
-        condition: service_healthy
-    environment:
+      SITE_URL: http://localhost:${SITE_PORT}
       VITE_SUPABASE_URL: http://localhost:${KONG_PORT}
       VITE_SUPABASE_ANON_KEY: ${ANON_KEY}
+      VITE_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: ${GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION}
+      
       SUPABASE_URL: http://${KONG_HOST}:${KONG_PORT}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      
       DB_PRIVATE_CONNECTION_STRING: postgres://postgres:${DB_SUPERUSER_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
   studio:

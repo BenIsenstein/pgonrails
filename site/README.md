@@ -1,40 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PgOnRails — App
 
-## Security note
+Barebones SaaS template built with TanStack Start, self-hosted Supabase, shadcn/ui, and Tailwind v4.
 
-If your deployment platform flags `CVE-2025-55184` / `GHSA-mwv6-3258-q52c`, bump `next` to a patched version (for this template, use `next >= 15.5.9`) and re-run `npm install` to update `package-lock.json`.
+## What's Included
 
-## Getting Started
+- Email/password authentication (sign up, sign in, forgot/reset password, delete account)
+- Avatar upload with Supabase Storage
+- User settings (display name, email, password, avatar)
+- Dark mode (Light / Dark / System) with cookie persistence
+- Protected routes with type-safe auth guards
+- Docker-based development environment with self-hosted Supabase
 
-First, run the development server:
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | TanStack Start (Vite + Nitro) |
+| Router | TanStack Router (file-based) |
+| Data | React Query + Supabase JS client |
+| Database | PostgreSQL via self-hosted Supabase |
+| UI | shadcn/ui + Tailwind v4 (oklch) |
+| Auth | Supabase Auth (email/password) |
+| Storage | Supabase Storage (avatars bucket) |
+| Dev env | Docker Compose |
+
+## Quick Start (Docker)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. Copy env file
+cp app/.env.example app/.env
+
+# 2. Start everything (app + self-hosted Supabase)
+docker compose up --build
+
+# 3. Open
+open http://localhost:3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dev container handles `pnpm install`, starts the Supabase stack, applies migrations, and runs the Vite dev server.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quick Start (Local)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd app
 
-## Learn More
+# 1. Install
+pnpm install
 
-To learn more about Next.js, take a look at the following resources:
+# 2. Start Supabase (requires Docker)
+npx supabase start
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 3. Copy env and fill in keys from `supabase status`
+cp .env.example .env
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 4. Run dev server
+pnpm dev
+```
 
-## Deploy on Vercel
+## Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `.env.example` for all required variables:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Purpose |
+|----------|---------|
+| `SUPABASE_URL` | Supabase API URL (server-side) |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key (server-side) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Admin key for user deletion (server-side only) |
+| `SITE_URL` | App URL for auth email redirects |
+| `VITE_SUPABASE_URL` | Supabase URL (client-side) |
+| `VITE_SUPABASE_ANON_KEY` | Anon key (client-side) |
+| `VITE_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION` | Enable OTP verification for password changes |
+
+## Project Structure
+
+```
+app/
+├── src/
+│   ├── routes/           # File-based routing (TanStack Router)
+│   │   ├── __root.tsx    # Root layout (fetchUser, Navbar, Toaster)
+│   │   ├── _authed.tsx   # Auth guard layout
+│   │   ├── _authed/      # Protected pages (settings, dashboard)
+│   │   ├── signin.tsx    # Public auth pages
+│   │   └── ...
+│   ├── server/
+│   │   └── auth.ts       # Server functions (signIn, signUp, etc.)
+│   ├── components/
+│   │   ├── ui/           # shadcn/ui primitives
+│   │   ├── settings/     # Settings page components
+│   │   └── navbar.tsx    # App navbar
+│   ├── utils/
+│   │   ├── supabase.ts   # Server Supabase client (cookie-bridged)
+│   │   ├── supabase-browser.ts  # Browser client
+│   │   └── types.ts      # AppUser type
+│   └── app.css           # Tailwind v4 + oklch theme variables
+├── supabase/
+│   └── migrations/       # SQL migrations (applied in timestamp order)
+├── .opencode/skills/     # Agent skill definitions
+└── AGENTS.md             # Agent routing table
+```
+
+## Build
+
+```bash
+cd app
+pnpm vite build     # Production build
+pnpm tsc --noEmit   # Type check
+```
+
+## Useful URLs (Local Dev)
+
+| Service | URL |
+|---------|-----|
+| App | http://localhost:3001 |
+| Supabase Studio | http://localhost:54323 |
+| Inbucket (email) | http://localhost:54324 |
+| Supabase API | http://localhost:54321 |
