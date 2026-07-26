@@ -21,6 +21,7 @@ FROM node:22-slim AS production
 WORKDIR /app
 COPY --from=build /app/.output ./.output
 
-EXPOSE 3001
-ENV PORT=3001
-CMD ["node", ".output/server/index.mjs"]
+# Install supabase CLI for migrations on startup
+RUN npm i -g supabase
+
+ENTRYPOINT supabase db push --debug --yes --db-url $DB_PRIVATE_CONNECTION_STRING && node .output/server/index.mjs
