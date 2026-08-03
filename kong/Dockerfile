@@ -1,4 +1,4 @@
-FROM kong/kong:3.9.1
+FROM kong/kong:3.9.3
 COPY ./kong.yml /home/kong/temp.yml
 COPY ./kong-entrypoint.sh /home/kong/kong-entrypoint.sh
 # COPY ./server.crt /home/kong/server.crt
