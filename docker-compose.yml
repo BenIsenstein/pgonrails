@@ -105,7 +105,7 @@ services:
           - envoy
           - kong
     ports:
-      - ${KONG_PORT}:${KONG_PORT}/tcp
+      - ${KONG_PORT}:8000/tcp
     healthcheck:
       # Using a TCP port check because this image does not include curl or wget.
       test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/8000'"]
