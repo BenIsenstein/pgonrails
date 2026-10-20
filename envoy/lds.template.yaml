@@ -173,14 +173,15 @@ resources:
                                       - any: true
 
                       - match:
-                          prefix: /.well-known/oauth-authorization-server
+                          prefix: /auth/v1/.well-known/oauth-authorization-server
                         route:
                           cluster: auth
+                          prefix_rewrite: /.well-known/oauth-authorization-server
                           timeout: 30s
                         request_headers_to_add:
                           - header:
                               key: X-Forwarded-Prefix
-                              value: /.well-known/oauth-authorization-server
+                              value: /auth/v1/.well-known/oauth-authorization-server
                             append_action: ADD_IF_ABSENT
                         typed_per_filter_config:
                           envoy.filters.http.basic_auth:
@@ -201,14 +202,15 @@ resources:
                                       - any: true
 
                       - match:
-                          prefix: /sso/saml/acs
+                          prefix: /auth/v1/.well-known/openid-configuration
                         route:
                           cluster: auth
+                          prefix_rewrite: /.well-known/openid-configuration
                           timeout: 30s
                         request_headers_to_add:
                           - header:
                               key: X-Forwarded-Prefix
-                              value: /sso/saml/acs
+                              value: /auth/v1/.well-known/openid-configuration
                             append_action: ADD_IF_ABSENT
                         typed_per_filter_config:
                           envoy.filters.http.basic_auth:
@@ -229,14 +231,73 @@ resources:
                                       - any: true
 
                       - match:
-                          prefix: /sso/saml/metadata
+                          path: /.well-known/oauth-authorization-server/auth/v1
                         route:
                           cluster: auth
+                          prefix_rewrite: /.well-known/oauth-authorization-server
                           timeout: 30s
                         request_headers_to_add:
                           - header:
                               key: X-Forwarded-Prefix
-                              value: /sso/saml/metadata
+                              value: /.well-known/oauth-authorization-server/auth/v1
+                            append_action: ADD_IF_ABSENT
+                        typed_per_filter_config:
+                          envoy.filters.http.basic_auth:
+                            '@type': >-
+                              type.googleapis.com/envoy.config.route.v3.FilterConfig
+                            disabled: true
+                          envoy.filters.http.rbac:
+                            '@type': >-
+                              type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBACPerRoute
+                            rbac:
+                              rules:
+                                action: ALLOW
+                                policies:
+                                  allow_all:
+                                    permissions:
+                                      - any: true
+                                    principals:
+                                      - any: true
+
+                      - match:
+                          prefix: /auth/v1/sso/saml/acs
+                        route:
+                          cluster: auth
+                          prefix_rewrite: /sso/saml/acs
+                          timeout: 30s
+                        request_headers_to_add:
+                          - header:
+                              key: X-Forwarded-Prefix
+                              value: /auth/v1/sso/saml/acs
+                            append_action: ADD_IF_ABSENT
+                        typed_per_filter_config:
+                          envoy.filters.http.basic_auth:
+                            '@type': >-
+                              type.googleapis.com/envoy.config.route.v3.FilterConfig
+                            disabled: true
+                          envoy.filters.http.rbac:
+                            '@type': >-
+                              type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBACPerRoute
+                            rbac:
+                              rules:
+                                action: ALLOW
+                                policies:
+                                  allow_all:
+                                    permissions:
+                                      - any: true
+                                    principals:
+                                      - any: true
+
+                      - match:
+                          prefix: /auth/v1/sso/saml/metadata
+                        route:
+                          cluster: auth
+                          prefix_rewrite: /sso/saml/metadata
+                          timeout: 30s
+                        request_headers_to_add:
+                          - header:
+                              key: X-Forwarded-Prefix
+                              value: /auth/v1/sso/saml/metadata
                             append_action: ADD_IF_ABSENT
                         typed_per_filter_config:
                           envoy.filters.http.basic_auth:
@@ -262,7 +323,10 @@ resources:
                         route:
                           cluster: functions
                           prefix_rewrite: /
-                          timeout: 150s
+                          # Allow the runtime's 400s wall clock to expire first.
+                          timeout: 410s
+                          # Limit inactivity, matching Kong's read_timeout.
+                          idle_timeout: 160s
                         request_headers_to_add:
                           - header:
                               key: X-Forwarded-Prefix
@@ -333,6 +397,43 @@ resources:
                               type.googleapis.com/envoy.config.route.v3.FilterConfig
                             disabled: true
                             
+                      - name: rest-v1-openapi-protected
+                        match:
+                          path: /rest/v1/
+                        route:
+                          cluster: rest
+                          prefix_rewrite: /
+                          timeout: 30s
+                        request_headers_to_add:
+                          - header:
+                              key: X-Forwarded-Prefix
+                              value: /rest/v1/
+                            append_action: ADD_IF_ABSENT
+                        typed_per_filter_config:
+                          envoy.filters.http.basic_auth:
+                            '@type': >-
+                              type.googleapis.com/envoy.config.route.v3.FilterConfig
+                            disabled: true
+                          envoy.filters.http.rbac:
+                            '@type': >-
+                              type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBACPerRoute
+                            rbac:
+                              rules:
+                                action: ALLOW
+                                policies:
+                                  admin:
+                                    permissions:
+                                      - any: true
+                                    principals:
+                                      - header:
+                                          name: apikey
+                                          string_match:
+                                            exact: '${SERVICE_ROLE_KEY}'
+                                      - header:
+                                          name: apikey
+                                          string_match:
+                                            exact: '${SERVICE_ROLE_KEY_ASYMMETRIC}'
+
                       - name: rest-v1-protected
                         match:
                           prefix: /rest/v1/
@@ -350,7 +451,7 @@ resources:
                             '@type': >-
                               type.googleapis.com/envoy.config.route.v3.FilterConfig
                             disabled: true
-                            
+
                       - name: graphql-v1-protected
                         match:
                           prefix: /graphql/v1
@@ -373,6 +474,68 @@ resources:
                               type.googleapis.com/envoy.config.route.v3.FilterConfig
                             disabled: true
                             
+                      - name: realtime-v1-api-openapi-blocked
+                        match:
+                          prefix: /realtime/v1/api/openapi
+                        route:
+                          cluster: realtime
+                          prefix_rewrite: /api/openapi
+                          timeout: 30s
+                          host_rewrite_literal: ${REALTIME_HOST}
+                        request_headers_to_add:
+                          - header:
+                              key: X-Forwarded-Prefix
+                              value: /realtime/v1/api/openapi
+                            append_action: ADD_IF_ABSENT
+                        typed_per_filter_config:
+                          envoy.filters.http.basic_auth:
+                            '@type': >-
+                              type.googleapis.com/envoy.config.route.v3.FilterConfig
+                            disabled: true
+                          envoy.filters.http.rbac:
+                            '@type': >-
+                              type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBACPerRoute
+                            rbac:
+                              rules:
+                                action: DENY
+                                policies:
+                                  deny_all:
+                                    permissions:
+                                      - any: true
+                                    principals:
+                                      - any: true
+
+                      - name: realtime-v1-api-tenants-blocked
+                        match:
+                          prefix: /realtime/v1/api/tenants
+                        route:
+                          cluster: realtime
+                          prefix_rewrite: /api/tenants
+                          timeout: 30s
+                          host_rewrite_literal: ${REALTIME_HOST}
+                        request_headers_to_add:
+                          - header:
+                              key: X-Forwarded-Prefix
+                              value: /realtime/v1/api/tenants
+                            append_action: ADD_IF_ABSENT
+                        typed_per_filter_config:
+                          envoy.filters.http.basic_auth:
+                            '@type': >-
+                              type.googleapis.com/envoy.config.route.v3.FilterConfig
+                            disabled: true
+                          envoy.filters.http.rbac:
+                            '@type': >-
+                              type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBACPerRoute
+                            rbac:
+                              rules:
+                                action: DENY
+                                policies:
+                                  deny_all:
+                                    permissions:
+                                      - any: true
+                                    principals:
+                                      - any: true
+
                       - name: realtime-v1-api-protected
                         match:
                           prefix: /realtime/v1/api
@@ -607,6 +770,7 @@ resources:
 
                       local PROTECTED_ROUTES = {
                         ["auth-v1-protected"] = true,
+                        ["rest-v1-openapi-protected"] = true,
                         ["rest-v1-protected"] = true,
                         ["graphql-v1-protected"] = true,
                         ["realtime-v1-api-protected"] = true,
@@ -863,6 +1027,54 @@ resources:
                         end
 
                         headers:replace("x-api-key", apikey)
+                      end
+
+                # Functions: translates opaque sb_ keys into the pre-signed internal
+                # asymmetric JWT and emits it as a raw sb-api-key header (no Bearer
+                # prefix), leaving Authorization untouched so user-session JWTs and
+                # legacy bearers flow through to the runtime unmodified. Any
+                # client-supplied sb-api-key is stripped first (anti-spoof). On no
+                # match the header is simply never set.
+                - name: envoy.filters.http.lua
+                  typed_config:
+                    '@type': >-
+                      type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+                    inline_code: |
+                      local FUNCTIONS_ROUTE = "functions-v1-all"
+                      local SECRET_KEY = "${SUPABASE_SECRET_KEY}"
+                      local PUBLISHABLE_KEY = "${SUPABASE_PUBLISHABLE_KEY}"
+                      local SERVICE_ROLE_JWT = "${SERVICE_ROLE_KEY_ASYMMETRIC}"
+                      local ANON_JWT = "${ANON_KEY_ASYMMETRIC}"
+                      local TRANSLATION_ENABLED = SECRET_KEY ~= "" and PUBLISHABLE_KEY ~= "" and SERVICE_ROLE_JWT ~= "" and ANON_JWT ~= ""
+
+                      local function translate(value)
+                        if value == nil or value == "" or not TRANSLATION_ENABLED then
+                          return nil
+                        end
+
+                        if value == SECRET_KEY or value == "Bearer " .. SECRET_KEY then
+                          return SERVICE_ROLE_JWT
+                        end
+
+                        if value == PUBLISHABLE_KEY or value == "Bearer " .. PUBLISHABLE_KEY then
+                          return ANON_JWT
+                        end
+
+                        return nil
+                      end
+
+                      function envoy_on_request(request_handle)
+                        if request_handle:streamInfo():routeName() ~= FUNCTIONS_ROUTE then
+                          return
+                        end
+
+                        local headers = request_handle:headers()
+                        headers:remove("sb-api-key")
+
+                        local translated = translate(headers:get("apikey")) or translate(headers:get("authorization"))
+                        if translated ~= nil then
+                          headers:add("sb-api-key", translated)
+                        end
                       end
 
                 # Synthesizes an Authorization header (Bearer …) from apikey when callers don’t provide a real JWT header.

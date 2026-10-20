@@ -11,10 +11,9 @@
 #   sh test-s3-backend.sh <backend_url>     # Custom URL
 #
 # Prerequisites:
-#   - Running self-hosted Supabase instance with S3 backend + test override:
-#       docker compose -f docker-compose.yml -f docker-compose.s3.yml \
-#         -f ./tests/docker-compose.s3.test.yml up -d
-#   - .env file with MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, GLOBAL_S3_BUCKET
+#   - Running self-hosted Supabase instance with the test override:
+#       docker compose -f docker-compose.yml -f ./tests/docker-compose.rustfs.test.yml up -d
+#   - .env file with S3_ID, S3_SECRET, STORAGE_S3_BUCKET
 #   - aws cli v2
 #   - jq (for JSON parsing)
 #
@@ -39,14 +38,13 @@ for cmd in aws jq; do
 done
 
 # Read backend credentials from .env
-BACKEND_ACCESS_KEY=$(grep '^MINIO_ROOT_USER=' .env | cut -d= -f2-)
-BACKEND_SECRET_KEY=$(grep '^MINIO_ROOT_PASSWORD=' .env | cut -d= -f2-)
-GLOBAL_S3_BUCKET=$(grep '^GLOBAL_S3_BUCKET=' .env | cut -d= -f2-)
-REGION=$(grep '^REGION=' .env | cut -d= -f2-)
-REGION="${REGION:-us-east-1}"
+BACKEND_ACCESS_KEY=$(grep '^S3_ID=' .env | cut -d= -f2-)
+BACKEND_SECRET_KEY=$(grep '^S3_SECRET=' .env | cut -d= -f2-)
+GLOBAL_S3_BUCKET=$(grep '^STORAGE_S3_BUCKET=' .env | cut -d= -f2-)
+REGION="default-region"
 
 if [ -z "$BACKEND_ACCESS_KEY" ] || [ -z "$BACKEND_SECRET_KEY" ]; then
-    echo "Error: MINIO_ROOT_USER or MINIO_ROOT_PASSWORD not set in .env"
+    echo "Error: S3_ID or S3_SECRET not set in .env"
     exit 1
 fi
 
