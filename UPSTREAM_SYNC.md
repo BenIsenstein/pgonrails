@@ -242,7 +242,72 @@ sandbox.
 
 ## Progress log
 
-- [ ] (fill in as work proceeds — see TaskList for the structured checklist)
+- [x] Image version bumps (all services) — commit `c865b16`
+- [x] Postgres 17 default, pg15 override, utils/upgrade-pg17.sh updated — commit `c865b16`
+- [x] JWT secret SQL exposure removed, functions_admin extensions grant,
+      meta/studio postgres role, API_EXTERNAL_URL /auth/v1, REST_DB_SCHEMAS
+      default — commit `c865b16`
+- [x] RustFS swap (default, not override; named volume for uid reasons) — commit `0605564`
+- [x] Gateway flip: Envoy default, Kong override (docker-compose.kong.yml) — commit `0605564`
+- [x] Routing/security parity in both envoy/ and kong/ (REST openapi root,
+      Realtime tenants/openapi block, SSO path, OAuth/OIDC discovery routes,
+      Functions sb_ key translation) — commit `0605564`
+- [x] Verified locally: Envoy-default and Kong-override both boot clean and
+      enforce identical security behavior (tested via `docker compose exec`
+      against the internal network, since this sandbox's own ingress
+      occupies host port 8000 - temporarily set `KONG_PORT=8010` in `.env`
+      for host-port testing, then reverted to 8000 before committing; `.env`
+      is gitignored so this never touched version control)
+- [x] CONFIG.md / README resync - audited, **no changes needed**. CONFIG.md's
+      prose already matched the new behavior (JWT_SECRET "not exposed to
+      SQL", PGRST_DB_SCHEMAS default `public,graphql_public`) before this
+      session touched any code - it's synced against upstream docs/source
+      independently of this repo's docker-compose.yml. No gateway-default or
+      pinned-image-version claims exist in CONFIG.md or README.md to update.
+- [x] Full verification pass - see below.
+- [ ] **Follow-up, not done, needs a fresh pass**: `tests/test-auth-keys.sh`
+      has several stale assertions left over from before this sync (same
+      root cause each time: the script uses the bare `/rest/v1/` OpenAPI
+      root and `/realtime/v1/api/tenants` as generic "is the REST/Realtime
+      API reachable" probes, both of which are now intentionally
+      restricted/blocked). Confirmed via a side-by-side run against
+      `/tmp/supabase-docker-research/docker/tests/test-auth-keys.sh`
+      (500 lines vs pgonrails's 368 - upstream has diverged more than
+      `test-self-hosted.sh` did) that upstream also had to rework this file
+      for the same reasons, but its current shape wasn't ported. Needs the
+      same treatment `test-self-hosted.sh` already got in this branch:
+      - Any assertion hitting `/rest/v1/` expecting 200 for anon/legacy
+        ANON_KEY needs to expect 403 instead (200 is still correct for
+        SERVICE_ROLE_KEY).
+      - Any assertion using `/realtime/v1/api/tenants` as a generic
+        reachability probe needs a different endpoint - that path is a
+        hard 403 for everyone now. Check what endpoint upstream's current
+        file uses instead.
+      - The JWKS-contains-EC-public-key failure is very likely unrelated -
+        this repo's demo `.env` doesn't have `JWT_KEYS`/asymmetric keys
+        configured at all, so that's probably a test-environment gap, not
+        a routing bug. Confirm by configuring opaque/asymmetric keys
+        (`utils/add-new-auth-keys.sh`) before concluding anything.
+      - Re-run with: `sh tests/test-auth-keys.sh http://localhost:8000`
+        (bring the stack up first; see "Running the stack" above for the
+        sandbox port-8000-conflict workaround if testing in a similar
+        environment).
+      Tracked as GitHub issue - check `gh issue list` on this repo for the
+      exact number if this note has gone stale.
+- [ ] Known issue found during verification, **out of scope for this sync,
+      not touched**: the `site` container crash-loops on `supabase db push`
+      with `tls error (The server does not support SSL connections)`. This
+      is the Supabase CLI (installed as `latest` via `npm i -g supabase` in
+      both `site/Dockerfile` and `site/dev.Dockerfile` - unpinned!) failing
+      to connect to Postgres. Nothing in this sync touched DB TLS
+      config, Postgres auth config, or the site Dockerfiles, and the error
+      looks like CLI-side SSL-negotiation behavior, not a server-side
+      config regression - likely the floating `supabase` CLI version
+      changed its default sslmode behavior. Worth pinning the CLI version
+      and investigating separately; did not block on it since every other
+      service in the stack (including `migrate-local.sh`'s equivalent
+      `supabase db push` invocation, which isn't run automatically) was
+      unaffected.
 
 ## If handing off to a fresh agent
 
