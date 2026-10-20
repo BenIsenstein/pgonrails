@@ -71,6 +71,8 @@ services:
       POSTGRES_PORT: ${DB_PORT}
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD}
+      # See: https://supabase.com/docs/guides/self-hosting/remove-superuser-access
+      POSTGRES_USER_READ_WRITE: postgres
 
       PGRST_DB_SCHEMAS: ${REST_DB_SCHEMAS}
 
@@ -175,7 +177,7 @@ services:
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${DB_AUTH_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
-      API_EXTERNAL_URL: http://localhost:${KONG_PORT}
+      API_EXTERNAL_URL: http://localhost:${KONG_PORT}/auth/v1
       GOTRUE_SITE_URL: http://localhost:${SITE_PORT}
 
       GOTRUE_JWT_ADMIN_ROLES: service_role
@@ -249,7 +251,6 @@ services:
       PGRST_JWT_SECRET: ${JWT_JWKS:-${JWT_SECRET}}
       
       PGRST_DB_USE_LEGACY_GUCS: false
-      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
       PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
 
   realtime:
@@ -441,7 +442,7 @@ services:
       PG_META_HOST: ${META_LISTEN}
       PG_META_PORT: ${META_PORT}
 
-      PG_META_DB_USER: supabase_admin
+      PG_META_DB_USER: postgres
       PG_META_DB_PASSWORD: ${DB_SUPERUSER_PASSWORD}
       PG_META_DB_HOST: ${DB_HOST}
       PG_META_DB_PORT: ${DB_PORT}
@@ -513,7 +514,6 @@ services:
       DB_STORAGE_PASSWORD: ${DB_STORAGE_PASSWORD}
 
       PGDATA: /var/lib/postgresql/data/pgdata
-      JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
 
   pgbouncer:

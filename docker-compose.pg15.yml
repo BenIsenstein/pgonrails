@@ -1,0 +1,21 @@
+# Postgres 15 override for self-hosted Supabase.
+#
+# Postgres 17 is the default (see db/Dockerfile). Use this override only if
+# you need to stay on Postgres 15, e.g. an existing deployment you haven't
+# upgraded yet.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.pg15.yml up -d
+#
+# To move from this override to the Postgres 17 default, run
+# utils/upgrade-pg17.sh, which handles the pg_upgrade data migration for you.
+#
+# Note: PG 15 and PG 17 use different postgres UIDs. If starting fresh with a
+# leftover db-config volume from the other version, you may see
+# "FATAL: invalid secret key". Either remove the old volume or fix ownership.
+
+services:
+  db:
+    build:
+      context: ./db
+      dockerfile: pg15.Dockerfile
