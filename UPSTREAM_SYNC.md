@@ -294,20 +294,20 @@ sandbox.
         environment).
       Tracked as GitHub issue - check `gh issue list` on this repo for the
       exact number if this note has gone stale.
-- [ ] Known issue found during verification, **out of scope for this sync,
-      not touched**: the `site` container crash-loops on `supabase db push`
-      with `tls error (The server does not support SSL connections)`. This
-      is the Supabase CLI (installed as `latest` via `npm i -g supabase` in
-      both `site/Dockerfile` and `site/dev.Dockerfile` - unpinned!) failing
-      to connect to Postgres. Nothing in this sync touched DB TLS
-      config, Postgres auth config, or the site Dockerfiles, and the error
-      looks like CLI-side SSL-negotiation behavior, not a server-side
-      config regression - likely the floating `supabase` CLI version
-      changed its default sslmode behavior. Worth pinning the CLI version
-      and investigating separately; did not block on it since every other
-      service in the stack (including `migrate-local.sh`'s equivalent
-      `supabase db push` invocation, which isn't run automatically) was
-      unaffected.
+- [x] **Fixed**: the `site` container's crash-loop on `supabase db push`
+      (`tls error (The server does not support SSL connections)`) was the
+      Supabase CLI defaulting to attempting SSL when none is specified on
+      the connection string. The `db` container has no SSL configured at
+      all (matches the error's own suggestion), so the fix is explicit:
+      append `?sslmode=disable` to `DB_PRIVATE_CONNECTION_STRING` in
+      `docker-compose.yml` and to the equivalent connection string in
+      `migrate-local.sh`. Verified: `supabase db push` now applies all four
+      migrations and the site boots to a 200 on `/`. Did not pin the
+      Supabase CLI version (still installed as `latest` via `npm i -g
+      supabase` in both `site/Dockerfile` and `site/dev.Dockerfile`) -
+      `sslmode=disable` is the durable fix regardless of CLI version, so
+      pinning wasn't necessary to resolve this, though it'd still reduce
+      drift risk for other future CLI behavior changes if wanted later.
 
 ## If handing off to a fresh agent
 
