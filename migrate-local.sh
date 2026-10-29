@@ -10,4 +10,4 @@ else
   exit 1
 fi
 
-cd site && supabase db push --debug --yes --db-url "postgres://postgres:$DB_SUPERUSER_PASSWORD@localhost:$DB_PORT/$DB_NAME"
+cd site && supabase db push --debug --yes --db-url "postgres://postgres:$DB_SUPERUSER_PASSWORD@localhost:$DB_PORT/$DB_NAME?sslmode=disable"

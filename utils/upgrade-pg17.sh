@@ -24,12 +24,15 @@
 #   DO NOT DELETE it until you have verified the upgrade was successful.
 #
 # Rollback (if the upgrade fails or you want to revert):
-#   1. docker compose -f docker-compose.yml -f docker-compose.pg17.yml down
+#   1. docker compose down
 #   2. rm -rf ./volumes/db/data
 #   3. mv ./volumes/db/data.bak.pg15 ./volumes/db/data
-#   4. docker compose run --rm db chown -R postgres:postgres /etc/postgresql-custom/
-#   5. docker compose up -d
+#   4. docker compose -f docker-compose.yml -f docker-compose.pg15.yml run --rm db chown -R postgres:postgres /etc/postgresql-custom/
+#   5. docker compose -f docker-compose.yml -f docker-compose.pg15.yml up -d
 #
+# Note: as of this version, Postgres 17 is the DEFAULT (db/Dockerfile). Postgres
+# 15 is now the override (docker-compose.pg15.yml). This script upgrades a
+# deployment currently running the PG15 override to the new PG17 default.
 
 # Ensure we're running under bash (not sh/zsh/dash).
 # Check that $BASH ends with /bash (not /sh, /zsh, etc.).
@@ -150,7 +153,7 @@ preflight() {
     docker compose version >/dev/null 2>&1 || die "Docker Compose not found."
     command -v curl >/dev/null 2>&1 || die "curl is required (for downloading upgrade scripts)."
     [ -f docker-compose.yml ] || die "Run this script from the docker/ directory."
-    [ -f docker-compose.pg17.yml ] || die "Missing docker-compose.pg17.yml."
+    [ -f db/Dockerfile ] || die "Missing db/Dockerfile."
     [ -f .env ] || die "Missing .env file."
 
     # Resolve db-config volume (exact match on _db-config suffix or bare db-config)
@@ -158,9 +161,9 @@ preflight() {
         | grep -E '^db-config$|_db-config$' | head -n 1)
     [ -n "$db_config_vol" ] || die "Could not find db-config volume. Is Supabase running?"
 
-    # Read the target PG17 image from the compose override (what the user will run)
-    PG17_TARGET_IMAGE=$(grep 'image:.*postgres' docker-compose.pg17.yml | awk '{print $2}' | head -n 1)
-    [ -n "$PG17_TARGET_IMAGE" ] || die "Could not read image from docker-compose.pg17.yml."
+    # Read the target PG17 image from the default db Dockerfile (what the user will run)
+    PG17_TARGET_IMAGE=$(grep '^FROM' db/Dockerfile | awk '{print $2}' | head -n 1)
+    [ -n "$PG17_TARGET_IMAGE" ] || die "Could not read image from db/Dockerfile."
 
     pg_password=$(grep '^POSTGRES_PASSWORD=' .env | cut -d '=' -f 2- | sed "s/^['\"]//;s/['\"]$//" | head -n 1)
     [ -n "$pg_password" ] || die "POSTGRES_PASSWORD not set in .env."
@@ -184,11 +187,11 @@ preflight() {
         warn "Backup directory already exists: $BACKUP_DIR"
         warn "This is likely from a previous upgrade attempt."
         warn "If you haven't verified that previous upgrade, roll back first:"
-        warn "  1. docker compose -f docker-compose.yml -f docker-compose.pg17.yml down"
+        warn "  1. docker compose down"
         warn "  2. rm -rf $DATA_DIR"
         warn "  3. mv $BACKUP_DIR $DATA_DIR"
-        warn "  4. docker compose run --rm db chown -R postgres:postgres /etc/postgresql-custom/"
-        warn "  5. docker compose up -d"
+        warn "  4. docker compose -f docker-compose.yml -f docker-compose.pg15.yml run --rm db chown -R postgres:postgres /etc/postgresql-custom/"
+        warn "  5. docker compose -f docker-compose.yml -f docker-compose.pg15.yml up -d"
         echo ""
         warn "Continuing will DELETE the existing backup permanently."
         confirm "Delete $BACKUP_DIR and start a fresh upgrade?"
@@ -617,7 +620,7 @@ start_pg17() {
         chown -R postgres:postgres /vol/
     '
 
-    docker compose -f docker-compose.yml -f docker-compose.pg17.yml up -d
+    docker compose up -d
 
     echo "  Waiting for Postgres 17 to be ready..."
     local retries=60
@@ -714,8 +717,8 @@ verify() {
     echo ""
     info "Upgrade complete!"
     echo ""
-    echo "  To use Postgres 17 going forward, always include the override:"
-    echo "    docker compose -f docker-compose.yml -f docker-compose.pg17.yml up -d"
+    echo "  Postgres 17 is now the default - no override flag needed:"
+    echo "    docker compose up -d"
     echo ""
     echo "  Postgres 15 backup:  $BACKUP_DIR"
     echo "  pgsodium key backup: ./volumes/db/pgsodium_root.key.bak.pg15"
@@ -723,11 +726,11 @@ verify() {
     echo "    rm -rf $BACKUP_DIR ./volumes/db/pg17_upgrade_bin_*.tar.gz"
     echo ""
     echo "  Rollback (if needed):"
-    echo "    1. docker compose -f docker-compose.yml -f docker-compose.pg17.yml down"
+    echo "    1. docker compose down"
     echo "    2. rm -rf $DATA_DIR"
     echo "    3. mv $BACKUP_DIR $DATA_DIR"
-    echo "    4. docker compose run --rm db chown -R postgres:postgres /etc/postgresql-custom/"
-    echo "    5. docker compose up -d"
+    echo "    4. docker compose -f docker-compose.yml -f docker-compose.pg15.yml run --rm db chown -R postgres:postgres /etc/postgresql-custom/"
+    echo "    5. docker compose -f docker-compose.yml -f docker-compose.pg15.yml up -d"
     echo ""
 }
 
