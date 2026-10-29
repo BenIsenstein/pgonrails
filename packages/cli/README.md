@@ -6,7 +6,7 @@ Deploy a complete self-hosted [Supabase](https://supabase.com/) instance with [P
 
 Prefer to use Railway's web UI?
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/complete-supabase-nextjs-frontend?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/pg-on-rails?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Prerequisites
 

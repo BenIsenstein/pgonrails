@@ -16,7 +16,7 @@ npx create-pgonrails
 
 Prefer to use Railway's web UI?
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/complete-supabase-nextjs-frontend?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/pg-on-rails?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Required for local dev
 
@@ -68,7 +68,7 @@ For the hackers. Configure every aspect of your Supabase application and version
 
 ## Deploy on Railway
 
-1. Visit the [template page](https://railway.com/deploy/5ArOQi?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic) for PG On Rails and click "Deploy Now".
+1. Visit the [template page](https://railway.com/deploy/pg-on-rails?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic) for PG On Rails and click "Deploy Now".
 
 2. Use the Supabase self-hosting tool to [generate a JWT secret and keys](https://supabase.com/docs/guides/self-hosting/docker#generate-api-keys) for your project. Add them to the input fields provided by the `Postgres` service.
 
@@ -97,7 +97,7 @@ For the hackers. Configure every aspect of your Supabase application and version
 
 ![Use Supabase Studio](https://github.com/BenIsenstein/pgonrails-media/blob/main/Use_Supabase_Studio.gif)
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/complete-supabase-nextjs-frontend?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/pg-on-rails?referralCode=benisenstein&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Frontend included with seamless dev mode
 
