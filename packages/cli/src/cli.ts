@@ -15,7 +15,7 @@ import { version } from "../package.json";
 // ============================================
 
 const RAILWAY_API_URL = "https://backboard.railway.com/graphql/v2";
-const TEMPLATE_ID = "5e14ce66-9fb7-472e-ac44-15067d57cedc";
+const TEMPLATE_ID = "f6965ebc-7a84-4cad-8070-c36ee3d4c9fd";
 const USER_AGENT = `create-pgonrails/${version}`;
 const UPSTREAM_URL = "https://github.com/BenIsenstein/pgonrails";
 const REPO_NAME = "pgonrails";
