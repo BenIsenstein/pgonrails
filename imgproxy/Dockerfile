@@ -1,1 +1,1 @@
-FROM darthsim/imgproxy:v4.0.21
+FROM ghcr.io/imgproxy/imgproxy:v4.0.24

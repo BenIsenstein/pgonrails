@@ -1,1 +1,1 @@
-FROM supabase/realtime:v2.148.3
+FROM supabase/realtime:v2.174.6
