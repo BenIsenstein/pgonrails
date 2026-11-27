@@ -1,1 +1,1 @@
-FROM ghcr.io/imgproxy/imgproxy:v4.0.24
+FROM ghcr.io/imgproxy/imgproxy:v4.0.25
